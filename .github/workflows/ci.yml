@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - src/**
+  pull_request:
+    branches: [master]
+    paths:
+      - src/**
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref_name}}
+
+permissions:
+  contents: write
+  security-events: write
+
+jobs:
+  test:
+    name: Test package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 22
+          cache: maven
+      - name: Set up tree-sitter
+        uses: tree-sitter/setup-action/lib@v1
+      - name: Set up tree-sitter-java
+        run: |-
+          git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java
+          make -Ctree-sitter-java all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
+      - name: Set up jextract
+        run: |-
+          curl -LSs '${{vars.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+      - name: Run tests
+        run: mvn --no-transfer-progress test
+      - name: Patch SpotBugs SARIF report
+        if: "!cancelled() && github.event_name == 'push'"
+        run: mvn antrun:run@patch-sarif
+      - name: Upload SpotBugs SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        if: "!cancelled() && github.event_name == 'push'"
+        with:
+          category: spotbugs
+          sarif_file: target/reports/spotbugsSarif.json
+      - name: Upload SpotBugs XML report
+        uses: lcollins/spotbugs-github-action@v3.0.0
+        if: "!cancelled() && github.event_name == 'pull_request'"
+        with:
+          path: target/reports/spotbugs.xml
+      - name: Upload JUnit XML report
+        uses: mikepenz/action-junit-report@v4
+        if: "!cancelled()"
+        with:
+          annotate_only: true
+          detailed_summary: true
+          report_paths: target/reports/surefire/TEST-*.xml

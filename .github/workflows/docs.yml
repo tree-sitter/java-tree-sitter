@@ -1,0 +1,54 @@
+name: Docs
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref_name}}
+
+jobs:
+  test:
+    name: Publish docs
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 22
+          cache: maven
+      - name: Set up tree-sitter
+        uses: tree-sitter/setup-action/lib@v1
+      - name: Set up tree-sitter-java
+        run: |-
+          git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java
+          make -Ctree-sitter-java all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
+      - name: Set up jextract
+        run: |-
+          curl -LSs '${{vars.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+      - name: Build javadoc
+        run: mvn --no-transfer-progress javadoc:javadoc antrun:run@fix-javadoc
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/site/apidocs
+      - name: Publish to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

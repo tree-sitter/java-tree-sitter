@@ -1,0 +1,18 @@
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/4.8.4"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/4.8.4
+      https://raw.githubusercontent.com/spotbugs/spotbugs/4.8.4/spotbugs/etc/findbugsfilter.xsd">
+  <Match>
+    <!-- auto-generated code -->
+    <Package name="io.github.treesitter.jtreesitter.internal"/>
+  </Match>
+  <Match>
+    <!-- always returns an unmodifiable list -->
+    <Bug pattern="EI_EXPOSE_REP"/>
+    <And>
+      <Class name="io.github.treesitter.jtreesitter.Parser"/>
+      <Method name="getIncludedRanges"/>
+    </And>
+  </Match>
+</FindBugsFilter>

@@ -1,0 +1,51 @@
+name: Deploy
+
+on:
+  push:
+    tags: ["*"]
+
+jobs:
+  deploy:
+    name: Deploy package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment:
+      name: maven-central
+      url: https://central.sonatype.com/artifact/io.github.tree-sitter/jtreesitter
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 22
+          cache: maven
+          server-id: central
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_TOKEN
+          gpg-private-key: ${{secrets.GPG_KEY}}
+      - name: Set up tree-sitter
+        uses: tree-sitter/setup-action/lib@v1
+      - name: Set up tree-sitter-java
+        run: |-
+          git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java
+          make -Ctree-sitter-java all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
+      - name: Set up jextract
+        run: |-
+          curl -LSs '${{vars.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+      - name: Deploy to Maven Central
+        run: mvn --no-transfer-progress deploy -Dspotbugs.skip=true
+        env:
+          SONATYPE_USERNAME: ${{secrets.SONATYPE_USERNAME}}
+          SONATYPE_TOKEN: ${{secrets.SONATYPE_TOKEN}}
+          MAVEN_GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
+      - name: Create release
+        run: gh release create $GITHUB_REF_NAME --generate-notes
+        env:
+          GH_TOKEN: ${{github.token}}
+          GH_REPO: ${{github.repository}}
