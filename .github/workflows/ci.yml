@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - src/**
+  pull_request:
+    branches: [master]
+    paths:
+      - src/**
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{github.workflow}}-${{github.ref_name}}
+
+permissions:
+  contents: write
+  security-events: write
+
+jobs:
+  test:
+    name: Test package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 22
+          cache: maven
+      - name: Set up jextract
+        run: |-
+          curl -LSs '${{vars.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+      - name: Run tests
+        run: mvn test
+      - name: Upload JUnit report
+        uses: mikepenz/action-junit-report@v4
+        if: "!cancelled()"
+        with:
+          annotate_only: true
+          detailed_summary: true
+          report_paths: target/reports/surefire/TEST-*.xml
+      - name: Upload SpotBugs report
+        uses: github/codeql-action/upload-sarif@v3
+        if: "!cancelled()"
+        with:
+          category: spotbugs
+          sarif_file: target/reports/spotbugsSarif.json

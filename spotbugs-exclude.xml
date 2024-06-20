@@ -1,0 +1,9 @@
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/4.8.4"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/4.8.4
+      https://raw.githubusercontent.com/spotbugs/spotbugs/4.8.4/spotbugs/etc/findbugsfilter.xsd">
+  <Match>
+    <Package name="io.github.treesitter.jtreesitter.internal"/>
+  </Match>
+</FindBugsFilter>

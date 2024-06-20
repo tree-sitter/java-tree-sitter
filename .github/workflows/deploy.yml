@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    tags: ["*"]
+
+jobs:
+  deploy:
+    name: Deploy package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 22
+          cache: maven
+          server-id: central
+          server-username: SONATYPE_USERNAME
+          server-password: SONATYPE_TOKEN
+          gpg-private-key: ${{secrets.GPG_KEY}}
+      - name: Set up jextract
+        run: |-
+          curl -LSs '${{vars.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+      - name: Deploy to Maven Central
+        run: mvn deploy
+        env:
+          SONATYPE_USERNAME: ${{secrets.SONATYPE_USERNAME}}
+          SONATYPE_TOKEN: ${{secrets.SONATYPE_TOKEN}}
+          GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
