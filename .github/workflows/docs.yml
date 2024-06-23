@@ -5,6 +5,10 @@ on:
     workflows: [CI]
     types: [completed]
     branches: [master]
+  push:
+    branches: [master]
+    paths:
+      - scripts/fix-javadoc.sh
 
 concurrency:
   cancel-in-progress: true
@@ -14,7 +18,9 @@ jobs:
   test:
     name: Publish docs
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event_name == 'push' ||
+      github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
       id-token: write

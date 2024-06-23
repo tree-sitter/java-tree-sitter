@@ -2,6 +2,9 @@
 
 shopt -s globstar
 
+style='pre[class*="language-"]::after, pre[class*="language-"]::before { box-shadow: unset; }'
+style+=' pre[class*="language-"] > code { z-index: unset; }</style>'
+
 additions=(
     '<link rel="icon" type="image/png" href="/tree-sitter/assets/images/favicon-32x32.png" sizes="32x32">'
     '<link rel="icon" type="image/png" href="/tree-sitter/assets/images/favicon-16x16.png" sizes="16x16">'
@@ -19,7 +22,7 @@ additions=(
     ' integrity="sha256-x2uk4kCTK9x1VGvjDlUPW6XhOBX/cVEcduniesMHJEQ=" crossorigin="anonymous" defer></script>'
     '<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js" type="text/javascript" '
     ' integrity="sha256-TC3IHfye+lHjinVzk4BlKIxjxkhQ8Boy+KeyCj4kxac=" crossorigin="anonymous" defer></script>'
-    '<style>pre[class*="language-"]::after, pre[class*="language-"]::before { box-shadow: unset; }</style>'
+    "<style>$style</style>"
 )
 
 for f in "${1:-target}"/site/apidocs/**/*.html; do

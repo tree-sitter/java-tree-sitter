@@ -4,10 +4,12 @@ on:
   push:
     branches: [master]
     paths:
+      - pom.xml
       - src/**
   pull_request:
     branches: [master]
     paths:
+      - pom.xml
       - src/**
 
 concurrency:
