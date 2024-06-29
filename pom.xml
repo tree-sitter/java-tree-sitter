@@ -47,9 +47,6 @@
     <maven.compiler.target>22</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.deploy.skip>true</maven.deploy.skip>
-    <spotbugs.failOnError>false</spotbugs.failOnError>
-    <spotbugs.xmlOutput>false</spotbugs.xmlOutput>
-    <spotbugs.sarifOutput>true</spotbugs.sarifOutput>
     <gpg.skip>true</gpg.skip>
     <jextract.skip>false</jextract.skip>
     <publish.auto>false</publish.auto>
@@ -72,7 +69,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
+        <version>3.1.0</version>
         <executions>
           <execution>
             <id>jextract</id>
@@ -83,7 +80,7 @@
             <configuration>
               <skip>${jextract.skip}</skip>
               <target name="jextract">
-                <echo>Generating sources using jextract</echo>
+                <echo level="info">Generating sources using jextract</echo>
                 <exec osfamily="windows" executable="${project.basedir}/scripts/jextract.ps1">
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
@@ -102,7 +99,7 @@
             </goals>
             <configuration>
               <target name="fix-javadoc">
-                <echo>Adding favicon &amp; prism.js to javadoc</echo>
+                <echo level="info">Adding favicon &amp; prism.js to javadoc</echo>
                 <exec executable="${project.basedir}/scripts/fix-javadoc.sh">
                   <arg value="${project.build.directory}"/>
                 </exec>
@@ -116,7 +113,7 @@
             </goals>
             <configuration>
               <target name="patch-sarif">
-                <echo>Patching SpotBugs sarif report</echo>
+                <echo level="info">Patching SpotBugs sarif report</echo>
                 <replace file="${project.build.directory}/reports/spotbugsSarif.json">
                   <replacetoken>"uri":"</replacetoken>
                   <replacevalue>"uri":"src/main/java/</replacevalue>
@@ -186,6 +183,8 @@
           </execution>
         </executions>
         <configuration>
+          <sarifOutput>true</sarifOutput>
+          <failOnError>false</failOnError>
           <xmlOutputDirectory>${project.build.directory}/reports</xmlOutputDirectory>
           <sarifOutputDirectory>${project.build.directory}/reports</sarifOutputDirectory>
           <excludeFilterFile>${project.basedir}/spotbugs-exclude.xml</excludeFilterFile>
@@ -305,20 +304,6 @@
         <gpg.skip>false</gpg.skip>
         <publish.auto>true</publish.auto>
         <publish.skip>false</publish.skip>
-      </properties>
-    </profile>
-    <profile>
-      <id>pull-request</id>
-      <activation>
-        <property>
-          <name>env.GITHUB_EVENT_NAME</name>
-          <value>pull_request</value>
-        </property>
-      </activation>
-      <properties>
-        <spotbugs.failOnError>true</spotbugs.failOnError>
-        <spotbugs.xmlOutput>true</spotbugs.xmlOutput>
-        <spotbugs.sarifOutput>false</spotbugs.sarifOutput>
       </properties>
     </profile>
   </profiles>

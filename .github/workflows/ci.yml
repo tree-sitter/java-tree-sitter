@@ -56,11 +56,6 @@ jobs:
         with:
           category: spotbugs
           sarif_file: target/reports/spotbugsSarif.json
-      - name: Upload SpotBugs XML report
-        uses: lcollins/spotbugs-github-action@v3.0.0
-        if: "!cancelled() && github.event_name == 'pull_request'"
-        with:
-          path: target/reports/spotbugs.xml
       - name: Upload JUnit XML report
         uses: mikepenz/action-junit-report@v4
         if: "!cancelled()"
