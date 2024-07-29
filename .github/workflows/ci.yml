@@ -35,8 +35,12 @@ jobs:
           distribution: temurin
           java-version: 22
           cache: maven
+      - name: Get tree-sitter commit
+        run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
       - name: Set up tree-sitter
         uses: tree-sitter/setup-action/lib@v1
+        with:
+          tree-sitter-ref: ${{env.TREE_SITTER_REF}}
       - name: Set up tree-sitter-java
         run: |-
           git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java

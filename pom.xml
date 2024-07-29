@@ -278,7 +278,6 @@
               <goal>publish</goal>
             </goals>
             <configuration>
-              <tokenAuth>true</tokenAuth>
               <waitUntil>validated</waitUntil>
               <autoPublish>${publish.auto}</autoPublish>
               <skipPublishing>${publish.skip}</skipPublishing>
