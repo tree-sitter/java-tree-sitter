@@ -111,6 +111,7 @@ jextract \
     --include-function ts_query_delete \
     --include-function ts_query_disable_capture \
     --include-function ts_query_disable_pattern \
+    --include-function ts_query_end_byte_for_pattern \
     --include-function ts_query_is_pattern_guaranteed_at_step \
     --include-function ts_query_is_pattern_non_local \
     --include-function ts_query_is_pattern_rooted \

@@ -120,7 +120,7 @@ public final class Query implements AutoCloseable {
         }
 
         try (var alloc = Arena.ofConfined()) {
-            for (int i = 0, steps = 0; i < patternCount; ++i) {
+            for (int i = 0, steps; i < patternCount; ++i) {
                 var count = alloc.allocate(C_INT);
                 var tokens = ts_query_predicates_for_pattern(query, i, count);
                 if ((steps = count.get(C_INT, 0)) == 0) continue;
@@ -367,6 +367,17 @@ public final class Query implements AutoCloseable {
     public @Unsigned int startByteForPattern(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
         return ts_query_start_byte_for_pattern(query, index);
+    }
+
+    /**
+     * Get the byte offset where the given pattern ends in the query's source.
+     *
+     * @throws IndexOutOfBoundsException If the index exceeds the
+     *                                   {@linkplain #getPatternCount pattern count}.
+     */
+    public @Unsigned int endByteForPattern(@Unsigned int index) throws IndexOutOfBoundsException {
+        checkIndex(index);
+        return ts_query_end_byte_for_pattern(query, index);
     }
 
     /**

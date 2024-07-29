@@ -149,6 +149,14 @@ class QueryTest {
     }
 
     @Test
+    void endByteForPattern() {
+        assertQuery(query -> {
+            assertEquals(26, query.endByteForPattern(0));
+            assertThrows(IndexOutOfBoundsException.class, () -> query.endByteForPattern(2));
+        });
+    }
+
+    @Test
     void isPatternRooted() {
         assertQuery(query -> {
             assertTrue(query.isPatternRooted(0));
