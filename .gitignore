@@ -11,6 +11,11 @@ out/
 *.log
 .attach_*
 
+# Eclipse
+.settings/
+.classpath
+.project
+
 ### Vim ###
 [._]*.s[a-v][a-z]
 [._]*.sw[a-p]

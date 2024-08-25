@@ -24,6 +24,11 @@ class NodeTest {
     }
 
     @Test
+    void getTree() {
+        assertSame(tree, node.getTree());
+    }
+
+    @Test
     void getId() {
         assertNotEquals(0L, node.getId());
     }

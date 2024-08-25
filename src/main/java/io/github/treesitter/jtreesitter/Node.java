@@ -35,7 +35,8 @@ public final class Node {
         return self.reinterpret(arena, null);
     }
 
-    Tree getTree() {
+    /** Get the tree that contains this node. */
+    public Tree getTree() {
         return tree;
     }
 
