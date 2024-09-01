@@ -108,6 +108,8 @@ jextract \
     --include-function ts_query_cursor_set_match_limit \
     --include-function ts_query_cursor_set_max_start_depth \
     --include-function ts_query_cursor_set_point_range \
+    --include-function ts_query_cursor_set_timeout_micros \
+    --include-function ts_query_cursor_timeout_micros \
     --include-function ts_query_delete \
     --include-function ts_query_disable_capture \
     --include-function ts_query_disable_pattern \

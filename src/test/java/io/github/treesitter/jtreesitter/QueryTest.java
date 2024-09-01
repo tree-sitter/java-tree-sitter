@@ -102,6 +102,19 @@ class QueryTest {
     }
 
     @Test
+    void getTimeoutMicros() {
+        assertQuery(query -> assertEquals(0, query.getTimeoutMicros()));
+    }
+
+    @Test
+    void setTimeoutMicros() {
+        assertQuery(query -> {
+            assertSame(query, query.setTimeoutMicros(10));
+            assertEquals(10, query.getTimeoutMicros());
+        });
+    }
+
+    @Test
     void setMaxStartDepth() {
         assertQuery(query -> assertSame(query, query.setMaxStartDepth(10)));
     }

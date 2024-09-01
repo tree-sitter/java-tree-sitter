@@ -295,6 +295,25 @@ public final class Query implements AutoCloseable {
     }
 
     /**
+     * Get the maximum duration in microseconds that query
+     * execution should be allowed to take before halting.
+     *
+     * @apiNote Defaults to {@code 0} (unlimited).
+     */
+    public @Unsigned long getTimeoutMicros() {
+        return ts_query_cursor_timeout_micros(cursor);
+    }
+
+    /**
+     * Set the maximum duration in microseconds that query
+     * execution should be allowed to take before halting.
+     */
+    public Query setTimeoutMicros(@Unsigned long timeoutMicros) {
+        ts_query_cursor_set_timeout_micros(cursor, timeoutMicros);
+        return this;
+    }
+
+    /**
      * Set the maximum start depth for the query.
      *
      * <p>This prevents cursors from exploring children nodes at a certain depth.
