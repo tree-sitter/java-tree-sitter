@@ -3,7 +3,7 @@ package io.github.treesitter.jtreesitter;
 import org.jspecify.annotations.NonNull;
 
 /** Any error that occurred while instantiating a {@link Query}. */
-public abstract sealed class QueryError extends Throwable
+public abstract sealed class QueryError extends IllegalArgumentException
         permits QueryError.Capture,
                 QueryError.Field,
                 QueryError.NodeType,
