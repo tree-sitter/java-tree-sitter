@@ -215,6 +215,7 @@ class NodeTest {
     @Test
     void getFieldNameForChild() {
         var child = node.getChild(0).orElseThrow();
+        assertNull(child.getFieldNameForChild(0));
         assertEquals("body", child.getFieldNameForChild(2));
     }
 

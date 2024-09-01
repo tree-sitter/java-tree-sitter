@@ -313,7 +313,7 @@ public final class Node {
                     "Child index %s is out of bounds".formatted(Integer.toUnsignedString(index)));
         }
         var segment = ts_node_field_name_for_child(self, index);
-        return segment == MemorySegment.NULL ? null : segment.getString(0);
+        return segment.equals(MemorySegment.NULL) ? null : segment.getString(0);
     }
 
     /**
