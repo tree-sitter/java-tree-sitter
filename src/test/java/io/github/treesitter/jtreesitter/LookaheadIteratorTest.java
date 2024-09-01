@@ -45,7 +45,7 @@ class LookaheadIteratorTest {
     @Test
     @DisplayName("reset(state)")
     void resetState() {
-        assertDoesNotThrow(() -> lookahead.nextElement());
+        assertDoesNotThrow(() -> lookahead.next());
         assertTrue(lookahead.reset(state));
         assertEquals("ERROR", lookahead.getCurrentSymbolName());
     }
@@ -53,20 +53,20 @@ class LookaheadIteratorTest {
     @Test
     @DisplayName("reset(language)")
     void resetLanguage() {
-        assertDoesNotThrow(() -> lookahead.nextElement());
+        assertDoesNotThrow(() -> lookahead.next());
         assertTrue(lookahead.reset(state, language));
         assertEquals("ERROR", lookahead.getCurrentSymbolName());
     }
 
     @Test
-    void hasMoreElements() {
-        assertTrue(lookahead.hasMoreElements());
+    void hasNext() {
+        assertTrue(lookahead.hasNext());
         assertEquals("ERROR", lookahead.getCurrentSymbolName());
     }
 
     @Test
-    void nextElement() {
-        assertEquals("end", lookahead.nextElement().name());
+    void next() {
+        assertEquals("end", lookahead.next().name());
     }
 
     @Test

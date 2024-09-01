@@ -19,7 +19,7 @@ import org.jspecify.annotations.NullMarked;
  * For {@index MISSING} nodes, a lookahead iterator created on the previous non-extra leaf node may be appropriate.
  */
 @NullMarked
-public final class LookaheadIterator implements AutoCloseable, Enumeration<LookaheadIterator.Symbol> {
+public final class LookaheadIterator implements AutoCloseable, Iterator<LookaheadIterator.Symbol> {
     private final Arena arena;
     private final MemorySegment self;
     private final short state;
@@ -80,8 +80,9 @@ public final class LookaheadIterator implements AutoCloseable, Enumeration<Looka
         return ts_lookahead_iterator_reset(self, language.segment(), state);
     }
 
+    /** Check if the lookahead iterator has more symbols. */
     @Override
-    public boolean hasMoreElements() {
+    public boolean hasNext() {
         if (iterFirst) {
             iterFirst = false;
             hasNext = ts_lookahead_iterator_next(self);
@@ -96,8 +97,8 @@ public final class LookaheadIterator implements AutoCloseable, Enumeration<Looka
      * @throws NoSuchElementException If there are no more symbols.
      */
     @Override
-    public Symbol nextElement() throws NoSuchElementException {
-        if (!hasMoreElements()) throw new NoSuchElementException();
+    public Symbol next() throws NoSuchElementException {
+        if (!hasNext()) throw new NoSuchElementException();
         hasNext = ts_lookahead_iterator_next(self);
         return new Symbol(getCurrentSymbol(), getCurrentSymbolName());
     }
@@ -125,6 +126,12 @@ public final class LookaheadIterator implements AutoCloseable, Enumeration<Looka
     @Override
     public void close() throws RuntimeException {
         arena.close();
+    }
+
+    /** @hidden */
+    @Override
+    public void remove() {
+        Iterator.super.remove();
     }
 
     /** A class that pairs a symbol ID with its name. */
