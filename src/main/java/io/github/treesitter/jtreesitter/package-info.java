@@ -15,7 +15,10 @@
  * <li>Shared libraries for languages</li>
  * </ul>
  *
- * <em>The shared libraries must be installed system-wide or in {@systemProperty java.library.path}</em>
+ * <em>The shared libraries must be installed in the OS-specific library path.</em>
+ * For example on Unix the `libtree-sitter.so` might have to be on `LD_LIBRARY_PATH`
+ * and on Windows `tree-sitter.dll` has to be in the current working directory or `PATH`
+ * (see the documentation of your OS for details).
  *
  * <h2 id="usage">Basic Usage</h2>
  *

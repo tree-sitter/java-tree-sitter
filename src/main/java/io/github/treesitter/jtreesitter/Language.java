@@ -60,12 +60,9 @@ public final class Language {
      * <h4 id="load-example">Example</h4>
      *
      * <p>{@snippet lang="java" :
-     * Language language;
-     * try (Arena arena = Arena.ofConfined()) {
-     *    String library = System.mapLibraryName("tree-sitter-java");
-     *    SymbolLookup symbols = SymbolLookup.libraryLookup(library, arena);
-     *    language = Language.load(symbols, "tree_sitter_java");
-     * }
+     * String library = System.mapLibraryName("tree-sitter-java");
+     * SymbolLookup symbols = SymbolLookup.libraryLookup(library, Arena.ofAuto());
+     * Language language = Language.load(symbols, "tree_sitter_java");
      * }
      *
      * @throws RuntimeException If the language could not be loaded.
