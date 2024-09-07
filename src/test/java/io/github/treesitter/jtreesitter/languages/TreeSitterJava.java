@@ -11,9 +11,7 @@ public final class TreeSitterJava {
     private static final TreeSitterJava INSTANCE = new TreeSitterJava();
 
     private final Arena arena = Arena.ofAuto();
-    private final String library = System.mapLibraryName("tree-sitter-java");
-    private final SymbolLookup symbols =
-            SymbolLookup.libraryLookup(library, arena).or(SymbolLookup.loaderLookup());
+    private final SymbolLookup symbols = findLibrary();
 
     /**
      * {@snippet lang=c :
@@ -22,6 +20,15 @@ public final class TreeSitterJava {
      */
     public static MemorySegment language() {
         return INSTANCE.call("tree_sitter_java");
+    }
+
+    private SymbolLookup findLibrary() {
+        try {
+            var library = System.mapLibraryName("tree-sitter-java");
+            return SymbolLookup.libraryLookup(library, arena);
+        } catch (IllegalArgumentException e) {
+            return SymbolLookup.loaderLookup();
+        }
     }
 
     private static UnsatisfiedLinkError unresolved(String name) {

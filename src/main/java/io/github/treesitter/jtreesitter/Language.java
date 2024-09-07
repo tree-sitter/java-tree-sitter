@@ -1,10 +1,9 @@
 package io.github.treesitter.jtreesitter;
 
-import java.lang.foreign.*;
 import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 
 import io.github.treesitter.jtreesitter.internal.TreeSitter;
-
+import java.lang.foreign.*;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -23,7 +22,7 @@ public final class Language {
     public static final @Unsigned int MIN_COMPATIBLE_LANGUAGE_VERSION = TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION();
 
     private static final ValueLayout VOID_PTR =
-        ValueLayout.ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.MAX_VALUE, ValueLayout.JAVA_BYTE));
+            ValueLayout.ADDRESS.withTargetLayout(MemoryLayout.sequenceLayout(Long.MAX_VALUE, ValueLayout.JAVA_BYTE));
 
     private static final FunctionDescriptor FUNC_DESC = FunctionDescriptor.of(VOID_PTR);
 
