@@ -30,5 +30,7 @@
  *     }
  * }
  *}
+ *
+ * @see <a href="https://github.com/openjdk/jextract/blob/master/doc/GUIDE.md#library-loading">Library Loading</a>
  */
 package io.github.treesitter.jtreesitter;
