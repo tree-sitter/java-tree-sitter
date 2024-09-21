@@ -542,24 +542,26 @@ public final class Query implements AutoCloseable {
 
         @Override
         public boolean tryAdvance(Consumer<? super QueryMatch> action) {
+            var hasNoText = tree.getText() == null;
             MemorySegment match = arena.allocate(TSQueryMatch.layout());
-            if (!ts_query_cursor_next_match(cursor, match)) return false;
-            var count = Short.toUnsignedInt(TSQueryMatch.capture_count(match));
-            var matchCaptures = TSQueryMatch.captures(match);
-            var captureList = new ArrayList<QueryCapture>(count);
-            for (int i = 0; i < count; ++i) {
-                var capture = TSQueryCapture.asSlice(matchCaptures, i);
-                var name = captureNames.get(TSQueryCapture.index(capture));
-                var node = TSNode.allocate(arena).copyFrom(TSQueryCapture.node(capture));
-                captureList.add(new QueryCapture(name, new Node(node, tree)));
+            while (ts_query_cursor_next_match(cursor, match)) {
+                var count = Short.toUnsignedInt(TSQueryMatch.capture_count(match));
+                var matchCaptures = TSQueryMatch.captures(match);
+                var captureList = new ArrayList<QueryCapture>(count);
+                for (int i = 0; i < count; ++i) {
+                    var capture = TSQueryCapture.asSlice(matchCaptures, i);
+                    var name = captureNames.get(TSQueryCapture.index(capture));
+                    var node = TSNode.allocate(arena).copyFrom(TSQueryCapture.node(capture));
+                    captureList.add(new QueryCapture(name, new Node(node, tree)));
+                }
+                var patternIndex = TSQueryMatch.pattern_index(match);
+                var result = new QueryMatch(patternIndex, captureList);
+                if (hasNoText || matches(predicate, result)) {
+                    action.accept(result);
+                    return true;
+                }
             }
-            var patternIndex = TSQueryMatch.pattern_index(match);
-            var result = new QueryMatch(patternIndex, captureList);
-            if (tree.getText() == null || matches(predicate, result)) {
-                action.accept(result);
-                return true;
-            }
-            return tryAdvance(action);
+            return false;
         }
     }
 }
