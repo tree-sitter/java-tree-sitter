@@ -288,5 +288,17 @@ class QueryTest {
                         "Foo", matches.getFirst().captures().getFirst().node().getText());
             });
         }
+
+        // Verify that capture count is treated as `uint16_t` and not as signed Java `short`
+        try (var tree = parser.parse(";".repeat(Short.MAX_VALUE + 1)).orElseThrow()) {
+            var source = """
+                ";"+ @capture
+                """;
+            assertQuery(source, query -> {
+                var matches = query.findMatches(tree.getRootNode()).toList();
+                assertEquals(1, matches.size());
+                assertEquals(Short.MAX_VALUE + 1, matches.getFirst().captures().size());
+            });
+        }
     }
 }
