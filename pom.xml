@@ -164,6 +164,7 @@
         <configuration>
           <java>
             <palantirJavaFormat>
+              <version>2.50.0</version>
               <style>PALANTIR</style>
               <formatJavadoc>false</formatJavadoc>
             </palantirJavaFormat>
