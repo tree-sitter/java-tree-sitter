@@ -544,10 +544,10 @@ public final class Query implements AutoCloseable {
         public boolean tryAdvance(Consumer<? super QueryMatch> action) {
             MemorySegment match = arena.allocate(TSQueryMatch.layout());
             if (!ts_query_cursor_next_match(cursor, match)) return false;
-            var count = TSQueryMatch.capture_count(match);
+            var count = Short.toUnsignedInt(TSQueryMatch.capture_count(match));
             var matchCaptures = TSQueryMatch.captures(match);
             var captureList = new ArrayList<QueryCapture>(count);
-            for (short i = 0; i < count; ++i) {
+            for (int i = 0; i < count; ++i) {
                 var capture = TSQueryCapture.asSlice(matchCaptures, i);
                 var name = captureNames.get(TSQueryCapture.index(capture));
                 var node = TSNode.allocate(arena).copyFrom(TSQueryCapture.node(capture));
