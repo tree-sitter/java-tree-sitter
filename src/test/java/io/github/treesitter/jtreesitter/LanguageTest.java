@@ -3,6 +3,8 @@ package io.github.treesitter.jtreesitter;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
+import java.lang.foreign.Arena;
+import java.lang.foreign.SymbolLookup;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +14,27 @@ public class LanguageTest {
     @BeforeAll
     static void beforeAll() {
         language = new Language(TreeSitterJava.language());
+    }
+
+    @Test
+    void load() {
+        // Uses `Language#load(SymbolLookup, String)`
+        try (var arena = Arena.ofConfined()) {
+            var library = System.mapLibraryName("tree-sitter-java");
+            var symbols = SymbolLookup.libraryLookup(library, arena);
+            var loadedLanguage = Language.load(symbols, "tree_sitter_java");
+            assertEquals(language.getVersion(), loadedLanguage.getVersion());
+            assertEquals(language.getSymbolCount(), loadedLanguage.getSymbolCount());
+        }
+
+        // Uses `Language#load(SymbolLookup, Arena, String)`
+        try (var arena = Arena.ofConfined()) {
+            var library = System.mapLibraryName("tree-sitter-java");
+            var symbols = SymbolLookup.libraryLookup(library, arena);
+            var loadedLanguage = Language.load(symbols, arena, "tree_sitter_java");
+            assertEquals(language.getVersion(), loadedLanguage.getVersion());
+            assertEquals(language.getSymbolCount(), loadedLanguage.getSymbolCount());
+        }
     }
 
     @Test

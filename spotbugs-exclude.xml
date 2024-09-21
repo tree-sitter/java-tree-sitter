@@ -15,4 +15,12 @@
       <Method name="getIncludedRanges"/>
     </And>
   </Match>
+  <Match>
+    <!-- Language constructor which stores given MemorySegment -->
+    <Bug pattern="EI_EXPOSE_REP2"/>
+    <And>
+      <Class name="io.github.treesitter.jtreesitter.Language"/>
+      <Method name="&lt;init&gt;"/>
+    </And>
+  </Match>
 </FindBugsFilter>
