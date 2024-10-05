@@ -2,8 +2,8 @@ package io.github.treesitter.jtreesitter;
 
 import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 
-import io.github.treesitter.jtreesitter.internal.TreeSitter;
 import java.lang.foreign.*;
+import java.lang.ref.Cleaner;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -28,6 +28,8 @@ public final class Language {
 
     private static final Linker LINKER = Linker.nativeLinker();
 
+    private static final Cleaner CLEANER = Cleaner.create();
+
     private final MemorySegment self;
 
     private final @Unsigned int version;
@@ -40,8 +42,9 @@ public final class Language {
      * @throws IllegalArgumentException If the language version is incompatible.
      */
     public Language(MemorySegment self) throws IllegalArgumentException {
-        this.self = self.reinterpret(LIBRARY_ARENA, TreeSitter::ts_language_delete);
+        this.self = self.asReadOnly();
         version = ts_language_version(this.self);
+        CLEANER.register(self, new Cleanup(this.self));
         if (version < MIN_COMPATIBLE_LANGUAGE_VERSION || version > LANGUAGE_VERSION) {
             throw new IllegalArgumentException(String.format(
                     "Incompatible language version %d. Must be between %d and %d.",
@@ -195,5 +198,18 @@ public final class Language {
     @Override
     public String toString() {
         return "Language{id=0x%x, version=%d}".formatted(self.address(), version);
+    }
+
+    private static final class Cleanup implements Runnable {
+        MemorySegment segment;
+
+        private Cleanup(MemorySegment segment) {
+            this.segment = segment;
+        }
+
+        @Override
+        public void run() {
+            ts_language_delete(segment);
+        }
     }
 }

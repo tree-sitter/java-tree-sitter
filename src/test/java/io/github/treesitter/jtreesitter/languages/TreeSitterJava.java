@@ -1,7 +1,6 @@
 package io.github.treesitter.jtreesitter.languages;
 
 import java.lang.foreign.*;
-import java.lang.invoke.MethodHandle;
 
 public final class TreeSitterJava {
     private static final ValueLayout VOID_PTR =
@@ -39,8 +38,8 @@ public final class TreeSitterJava {
     private MemorySegment call(String name) throws UnsatisfiedLinkError {
         var address = symbols.find(name).orElseThrow(() -> unresolved(name));
         try {
-            final MethodHandle function = LINKER.downcallHandle(address, FUNC_DESC);
-            return ((MemorySegment) function.invokeExact()).asReadOnly();
+            var function = LINKER.downcallHandle(address, FUNC_DESC);
+            return (MemorySegment) function.invokeExact();
         } catch (Throwable e) {
             throw new RuntimeException("Call to %s failed".formatted(name), e);
         }

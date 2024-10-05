@@ -2,7 +2,7 @@
 
 package=io.github.treesitter.jtreesitter.internal
 
-jextract \
+exec jextract \
     --include-struct TSInput \
     --include-struct TSInputEdit \
     --include-struct TSLogger \
@@ -182,6 +182,3 @@ jextract \
     -I "$1"/core/lib/include \
     -DTREE_SITTER_HIDE_SYMBOLS \
     "$1"/core/lib/include/tree_sitter/api.h
-
-sed -i'' 's/static final Arena/public &/' \
-    "$2/generated-sources/jextract/${package//.//}/TreeSitter.java"

@@ -181,7 +181,3 @@ $env:package = 'io.github.treesitter.jtreesitter.internal'
     -I "$($args[0])/core/lib/include" `
     -DTREE_SITTER_HIDE_SYMBOLS `
     "$($args[0])/core/lib/include/tree_sitter/api.h"
-
-$env:package = $env:package -replace '\.', '/'
-$env:file = "$($args[1])/generated-sources/jextract/$env:package/TreeSitter.java"
-(Get-Content -path "$env:file").Replace('static final Arena', 'public $0') | Set-Content "$env:file"
