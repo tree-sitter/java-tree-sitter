@@ -78,7 +78,11 @@ class ParserTest {
     void parseUtf8() {
         parser.setLanguage(language);
         try (var tree = parser.parse("class Foo {}").orElseThrow()) {
-            assertEquals(12, tree.getRootNode().getEndByte());
+            var rootNode = tree.getRootNode();
+
+            assertEquals(12, rootNode.getEndByte());
+            assertFalse(rootNode.isError());
+            assertEquals("(program (class_declaration name: (identifier) body: (class_body)))", rootNode.toSexp());
         }
     }
 
@@ -87,7 +91,13 @@ class ParserTest {
     void parseUtf16() {
         parser.setLanguage(language);
         try (var tree = parser.parse("var java = \"💩\";", InputEncoding.UTF_16).orElseThrow()) {
-            assertEquals(32, tree.getRootNode().getEndByte());
+            var rootNode = tree.getRootNode();
+
+            assertEquals(32, rootNode.getEndByte());
+            assertFalse(rootNode.isError());
+            assertEquals(
+                    "(program (local_variable_declaration type: (type_identifier) declarator: (variable_declarator name: (identifier) value: (string_literal (string_fragment)))))",
+                    rootNode.toSexp());
         }
     }
 
