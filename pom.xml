@@ -7,7 +7,7 @@
   <groupId>io.github.tree-sitter</groupId>
   <artifactId>jtreesitter</artifactId>
   <name>JTreeSitter</name>
-  <version>0.23.1</version>
+  <version>0.23.2</version>
   <description>Java bindings to the tree-sitter parsing library</description>
   <url>https://tree-sitter.github.io/java-tree-sitter/</url>
   <inceptionYear>2024</inceptionYear>
