@@ -25,7 +25,7 @@ additions=(
     "<style>$style</style>"
 )
 
-for f in "${1:-target}"/site/apidocs/**/*.html; do
+for f in "${1:-target}"/reports/apidocs/**/*.html; do
     for line in "${additions[@]}"; do
         sed -i "/<\/head>/i $line" "$f"
     done

@@ -81,11 +81,11 @@
               <skip>${jextract.skip}</skip>
               <target name="jextract">
                 <echo level="info">Generating sources using jextract</echo>
-                <exec osfamily="windows" executable="${project.basedir}/scripts/jextract.ps1">
+                <exec osfamily="windows" executable="${project.basedir}/scripts/jextract.ps1" failonerror="true">
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
                 </exec>
-                <exec osfamily="unix" executable="${project.basedir}/scripts/jextract.sh">
+                <exec osfamily="unix" executable="${project.basedir}/scripts/jextract.sh" failonerror="true">
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
                 </exec>
@@ -100,7 +100,7 @@
             <configuration>
               <target name="fix-javadoc">
                 <echo level="info">Adding favicon &amp; prism.js to javadoc</echo>
-                <exec executable="${project.basedir}/scripts/fix-javadoc.sh">
+                <exec executable="${project.basedir}/scripts/fix-javadoc.sh" failonerror="true">
                   <arg value="${project.build.directory}"/>
                 </exec>
               </target>
