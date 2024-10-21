@@ -62,6 +62,9 @@ public final class Language {
      * SymbolLookup symbols = SymbolLookup.libraryLookup(library, Arena.global());
      * Language language = Language.load(symbols, "tree_sitter_java");
      * }
+     * <p>
+     * <strong>The {@linkplain Arena} used to load the language
+     * must not be closed while the language is being used.</strong>
      *
      * @throws RuntimeException If the language could not be loaded.
      */
