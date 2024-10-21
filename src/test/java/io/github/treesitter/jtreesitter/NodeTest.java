@@ -220,6 +220,12 @@ class NodeTest {
     }
 
     @Test
+    void getFieldNameForNamedChild() {
+        var child = node.getChild(0).orElseThrow();
+        assertNull(child.getFieldNameForNamedChild(2));
+    }
+
+    @Test
     @DisplayName("getDescendant(bytes)")
     void getDescendantBytes() {
         var descendant = node.getDescendant(0, 5).orElseThrow();

@@ -317,6 +317,21 @@ public final class Node {
     }
 
     /**
+     * Get the field name of this node's <em>named</em> child at the given index, if available.
+     *
+     * @throws IndexOutOfBoundsException If the index exceeds the
+     *                                   {@linkplain #getNamedChildCount() child count}.
+     */
+    public @Nullable String getFieldNameForNamedChild(@Unsigned int index) throws IndexOutOfBoundsException {
+        if (index >= getChildCount()) {
+            throw new IndexOutOfBoundsException(
+                "Child index %s is out of bounds".formatted(Integer.toUnsignedString(index)));
+        }
+        var segment = ts_node_field_name_for_named_child(self, index);
+        return segment.equals(MemorySegment.NULL) ? null : segment.getString(0);
+    }
+
+    /**
      * Get the smallest node within this node that spans the given byte range, if any.
      *
      * @throws IllegalArgumentException If {@code start > end}.

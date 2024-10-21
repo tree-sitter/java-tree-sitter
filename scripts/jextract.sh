@@ -48,6 +48,7 @@ exec jextract \
     --include-function ts_node_end_point \
     --include-function ts_node_eq \
     --include-function ts_node_field_name_for_child \
+    --include-function ts_node_field_name_for_named_child \
     --include-function ts_node_first_child_for_byte \
     --include-function ts_node_first_named_child_for_byte \
     --include-function ts_node_grammar_symbol \
