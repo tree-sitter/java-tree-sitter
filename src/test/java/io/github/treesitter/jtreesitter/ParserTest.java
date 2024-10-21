@@ -133,14 +133,21 @@ class ParserTest {
     @Test
     @DisplayName("parse(timeout)")
     void parseTimeout() {
-        assertThrows(IllegalStateException.class, () -> parser.parse(""));
+        var source = "}".repeat(1024);
+        // NOTE: can't use _ because of palantir/palantir-java-format#934
+        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+
         parser.setLanguage(language).setTimeoutMicros(2L);
-        assertTrue(parser.parse("}".repeat(1024), InputEncoding.UTF_8).isEmpty());
+        assertTrue(parser.parse(callback, InputEncoding.UTF_8).isEmpty());
     }
 
     @Test
     @DisplayName("parse(cancellation)")
     void parseCancellation() {
+        var source = "}".repeat(1024 * 1024);
+        // NOTE: can't use _ because of palantir/palantir-java-format#934
+        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+
         var flag = new Parser.CancellationFlag();
         parser.setLanguage(language).setCancellationFlag(flag);
         try (var service = Executors.newFixedThreadPool(2)) {
@@ -153,7 +160,7 @@ class ParserTest {
                     flag.set(1L);
                 }
             });
-            var result = service.submit(() -> parser.parse("}".repeat(1024 * 1024)));
+            var result = service.submit(() -> parser.parse(callback, InputEncoding.UTF_8));
             assertTrue(result.get(30L, TimeUnit.MILLISECONDS).isEmpty());
         } catch (InterruptedException | CancellationException | ExecutionException | TimeoutException e) {
             fail("Parsing was not halted gracefully", e);
