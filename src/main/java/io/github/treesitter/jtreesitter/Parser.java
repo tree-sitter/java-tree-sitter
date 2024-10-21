@@ -238,7 +238,7 @@ public final class Parser implements AutoCloseable {
             throw new IllegalStateException("The parser has no language assigned");
         }
 
-        try (var alloc = Arena.ofConfined()) {
+        try (var alloc = Arena.ofShared()) {
             var bytes = source.getBytes(encoding.charset());
             var string = alloc.allocateFrom(C_CHAR, bytes);
             var old = oldTree == null ? MemorySegment.NULL : oldTree.segment();

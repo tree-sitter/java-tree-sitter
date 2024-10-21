@@ -17,20 +17,20 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
     private @Nullable Node node;
 
     TreeCursor(Node node, Tree tree) {
-        arena = Arena.ofConfined();
+        arena = Arena.ofShared();
         self = ts_tree_cursor_new(arena, node.copy(arena));
         this.tree = tree;
     }
 
     TreeCursor(Tree tree) {
-        arena = Arena.ofConfined();
+        arena = Arena.ofShared();
         var node = ts_tree_root_node(arena, tree.segment());
         self = ts_tree_cursor_new(arena, node);
         this.tree = tree;
     }
 
     private TreeCursor(TreeCursor cursor) {
-        arena = Arena.ofConfined();
+        arena = Arena.ofShared();
         self = ts_tree_cursor_copy(arena, cursor.self);
         tree = cursor.tree.clone();
         node = cursor.node;

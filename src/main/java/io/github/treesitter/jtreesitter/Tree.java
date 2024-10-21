@@ -21,7 +21,7 @@ public final class Tree implements AutoCloseable, Cloneable {
     private @Nullable List<Range> includedRanges;
 
     Tree(MemorySegment self, Language language, @Nullable String source) {
-        arena = Arena.ofConfined();
+        arena = Arena.ofShared();
         this.self = self.reinterpret(arena, TreeSitter::ts_tree_delete);
         this.language = language;
         this.source = source;
@@ -29,7 +29,7 @@ public final class Tree implements AutoCloseable, Cloneable {
 
     private Tree(Tree tree) {
         var copy = ts_tree_copy(tree.self);
-        arena = Arena.ofConfined();
+        arena = Arena.ofShared();
         self = copy.reinterpret(arena, TreeSitter::ts_tree_delete);
         language = tree.language;
         source = tree.source;
@@ -60,7 +60,7 @@ public final class Tree implements AutoCloseable, Cloneable {
      * its position shifted forward by the given offset.
      */
     public @Nullable Node getRootNodeWithOffset(@Unsigned int bytes, Point extent) {
-        try (var alloc = Arena.ofConfined()) {
+        try (var alloc = Arena.ofShared()) {
             var offsetExtent = extent.into(alloc);
             var node = ts_tree_root_node_with_offset(arena, self, bytes, offsetExtent);
             if (ts_node_is_null(node)) return null;

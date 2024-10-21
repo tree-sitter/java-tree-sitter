@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.*;
 
 class TreeTest {
@@ -87,8 +89,17 @@ class TreeTest {
     @Test
     @DisplayName("clone()")
     void copy() {
-        try (var copy = tree.clone()) {
-            assertNotSame(tree, copy);
+        try (var exec = Executors.newSingleThreadExecutor()) {
+            var result = exec.submit(() -> {
+                try (var copy = tree.clone()) {
+                    assertNotSame(tree, copy);
+                    assertEquals(
+                            tree.getRootNode().toString(), copy.getRootNode().toString());
+                }
+            });
+            result.get();
+        } catch (InterruptedException | ExecutionException e) {
+            fail(e);
         }
     }
 }
