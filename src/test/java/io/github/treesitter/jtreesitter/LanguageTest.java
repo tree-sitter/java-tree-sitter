@@ -57,6 +57,11 @@ public class LanguageTest {
     }
 
     @Test
+    void isSupertype() {
+        assertFalse(language.isSupertype((short) 1));
+    }
+
+    @Test
     void getFieldNameForId() {
         assertNotNull(language.getFieldNameForId((short) 20));
     }

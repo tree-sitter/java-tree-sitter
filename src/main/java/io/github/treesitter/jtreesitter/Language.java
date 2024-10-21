@@ -133,6 +133,11 @@ public final class Language {
         return ts_language_symbol_type(self, symbol) <= TSSymbolTypeAnonymous();
     }
 
+    /** Check if the node for the given numerical ID is a supertype. */
+    public boolean isSupertype(@Unsigned short symbol) {
+        return ts_language_symbol_type(self, symbol) == TSSymbolTypeSupertype();
+    }
+
     /** Get the field name for the given numerical id. */
     public @Nullable String getFieldNameForId(@Unsigned short id) {
         var name = ts_language_field_name_for_id(self, id);

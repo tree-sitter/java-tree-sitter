@@ -175,6 +175,7 @@ exec jextract \
     --include-constant TSSymbolTypeAnonymous \
     --include-constant TSSymbolTypeAuxiliary \
     --include-constant TSSymbolTypeRegular \
+    --include-constant TSSymbolTypeSupertype \
     --header-class-name TreeSitter \
     --output "$2"/generated-sources/jextract \
     -t "$package" \

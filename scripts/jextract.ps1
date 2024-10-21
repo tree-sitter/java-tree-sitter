@@ -174,6 +174,7 @@ $env:package = 'io.github.treesitter.jtreesitter.internal'
     --include-constant TSSymbolTypeAnonymous `
     --include-constant TSSymbolTypeAuxiliary `
     --include-constant TSSymbolTypeRegular `
+    --include-constant TSSymbolTypeSupertype `
     --header-class-name TreeSitter `
     --output "$($args[1])/generated-sources/jextract" `
     -t $env:package `

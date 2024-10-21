@@ -325,7 +325,7 @@ public final class Node {
     public @Nullable String getFieldNameForNamedChild(@Unsigned int index) throws IndexOutOfBoundsException {
         if (index >= getChildCount()) {
             throw new IndexOutOfBoundsException(
-                "Child index %s is out of bounds".formatted(Integer.toUnsignedString(index)));
+                    "Child index %s is out of bounds".formatted(Integer.toUnsignedString(index)));
         }
         var segment = ts_node_field_name_for_named_child(self, index);
         return segment.equals(MemorySegment.NULL) ? null : segment.getString(0);
