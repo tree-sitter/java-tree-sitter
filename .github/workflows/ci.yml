@@ -47,8 +47,11 @@ jobs:
           make -Ctree-sitter-java all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
       - name: Set up jextract
         run: |-
-          curl -LSs '${{vars.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          curl -LSs '${{env.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
           printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+        env:
+          # NOTE: keep this in sync with deploy, docs
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_linux-x64_bin.tar.gz
       - name: Run tests
         run: mvn --no-transfer-progress test
       - name: Patch SpotBugs SARIF report
