@@ -321,6 +321,7 @@ public final class Node {
      *
      * @throws IndexOutOfBoundsException If the index exceeds the
      *                                   {@linkplain #getNamedChildCount() child count}.
+     * @since 0.24.0
      */
     public @Nullable String getFieldNameForNamedChild(@Unsigned int index) throws IndexOutOfBoundsException {
         if (index >= getChildCount()) {

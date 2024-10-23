@@ -299,6 +299,7 @@ public final class Query implements AutoCloseable {
      * execution should be allowed to take before halting.
      *
      * @apiNote Defaults to {@code 0} (unlimited).
+     * @since 0.23.1
      */
     public @Unsigned long getTimeoutMicros() {
         return ts_query_cursor_timeout_micros(cursor);
@@ -307,6 +308,8 @@ public final class Query implements AutoCloseable {
     /**
      * Set the maximum duration in microseconds that query
      * execution should be allowed to take before halting.
+     *
+     * @since 0.23.1
      */
     public Query setTimeoutMicros(@Unsigned long timeoutMicros) {
         ts_query_cursor_set_timeout_micros(cursor, timeoutMicros);
@@ -393,6 +396,7 @@ public final class Query implements AutoCloseable {
      *
      * @throws IndexOutOfBoundsException If the index exceeds the
      *                                   {@linkplain #getPatternCount pattern count}.
+     * @since 0.23.0
      */
     public @Unsigned int endByteForPattern(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
