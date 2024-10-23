@@ -251,15 +251,23 @@ class NodeTest {
     @DisplayName("getNamedDescendant(points)")
     void getNamedDescendantPoints() {
         Point startPoint = new Point(0, 6), endPoint = new Point(0, 9);
-        var descendant = node.getDescendant(startPoint, endPoint).orElseThrow();
+        var descendant = node.getNamedDescendant(startPoint, endPoint).orElseThrow();
         assertEquals("identifier", descendant.getGrammarType());
     }
 
     @Test
+    @SuppressWarnings("removal")
     void getChildContainingDescendant() {
         var descendant = node.getChild(0).orElseThrow();
         descendant = descendant.getChild(0).orElseThrow();
         var child = node.getChildContainingDescendant(descendant);
+        assertEquals("class_declaration", child.orElseThrow().getType());
+    }
+
+    @Test
+    void getChildWithDescendant() {
+        var descendant = node.getChild(0).orElseThrow();
+        var child = node.getChildWithDescendant(descendant);
         assertEquals("class_declaration", child.orElseThrow().getType());
     }
 

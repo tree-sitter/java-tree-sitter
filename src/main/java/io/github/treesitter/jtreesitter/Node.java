@@ -386,9 +386,25 @@ public final class Node {
         return optional(ts_node_named_descendant_for_point_range(arena, self, startPoint, endPoint));
     }
 
-    /** Get the child of the node that contains the given descendant, if any. */
+    /**
+     * Get the child of the node that contains the given descendant, if any.
+     *
+     * @apiNote This method will not return the descendant if it is a direct child of this node.
+     * @deprecated Use {@link #getChildWithDescendant} instead.
+     */
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("DeprecatedIsStillUsed")
     public Optional<Node> getChildContainingDescendant(Node descendant) {
         return optional(ts_node_child_containing_descendant(arena, self, descendant.self));
+    }
+
+    /**
+     * Get the node that contains the given descendant, if any.
+     *
+     * @since 0.24.0
+     */
+    public Optional<Node> getChildWithDescendant(Node descendant) {
+        return optional(ts_node_child_with_descendant(arena, self, descendant.self));
     }
 
     /** Get the source code of the node, if available. */
