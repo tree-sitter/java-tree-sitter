@@ -271,7 +271,7 @@
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>0.5.0</version>
+        <version>0.6.0</version>
         <executions>
           <execution>
             <phase>deploy</phase>
