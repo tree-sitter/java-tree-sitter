@@ -5,6 +5,7 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 import io.github.treesitter.jtreesitter.internal.TSRange;
 import io.github.treesitter.jtreesitter.internal.TreeSitter;
 import java.lang.foreign.*;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,16 +16,18 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public final class Tree implements AutoCloseable, Cloneable {
     private final MemorySegment self;
-    private @Nullable String source;
+    private byte[] source;
+    private @Nullable Charset charset;
     private final Arena arena;
     private final Language language;
     private @Nullable List<Range> includedRanges;
 
-    Tree(MemorySegment self, Language language, @Nullable String source) {
+    Tree(MemorySegment self, Language language, @Nullable String source, @Nullable Charset charset) {
         arena = Arena.ofShared();
         this.self = self.reinterpret(arena, TreeSitter::ts_tree_delete);
         this.language = language;
-        this.source = source;
+        this.source = source != null && charset != null ? source.getBytes(charset) : new byte[0];
+        this.charset = charset;
     }
 
     private Tree(Tree tree) {
@@ -33,11 +36,18 @@ public final class Tree implements AutoCloseable, Cloneable {
         self = copy.reinterpret(arena, TreeSitter::ts_tree_delete);
         language = tree.language;
         source = tree.source;
+        charset = tree.charset;
         includedRanges = tree.includedRanges;
     }
 
     MemorySegment segment() {
         return self;
+    }
+
+    @Nullable
+    String getRegion(@Unsigned int start, @Unsigned int end) {
+        var length = Math.min(end, source.length) - start;
+        return charset != null ? new String(source, start, length, charset) : null;
     }
 
     /** Get the language that was used to parse the syntax tree. */
@@ -47,7 +57,7 @@ public final class Tree implements AutoCloseable, Cloneable {
 
     /** Get the source code of the syntax tree, if available. */
     public @Nullable String getText() {
-        return source;
+        return charset != null ? new String(source, charset) : null;
     }
 
     /** Get the root node of the syntax tree. */
@@ -122,7 +132,8 @@ public final class Tree implements AutoCloseable, Cloneable {
         try (var alloc = Arena.ofConfined()) {
             ts_tree_edit(self, edit.into(alloc));
         } finally {
-            source = null;
+            source = new byte[0];
+            charset = null;
         }
     }
 
