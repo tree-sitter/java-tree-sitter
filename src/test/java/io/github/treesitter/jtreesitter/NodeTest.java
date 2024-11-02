@@ -13,7 +13,7 @@ class NodeTest {
     static void beforeAll() {
         var language = new Language(TreeSitterJava.language());
         try (var parser = new Parser(language)) {
-            tree = parser.parse("class Foo {}").orElseThrow();
+            tree = parser.parse("class Foo {} // uni©ode").orElseThrow();
             node = tree.getRootNode();
         }
     }
@@ -100,13 +100,13 @@ class NodeTest {
 
     @Test
     void getEndByte() {
-        assertEquals(12, node.getEndByte());
+        assertEquals(24, node.getEndByte());
     }
 
     @Test
     void getRange() {
-        Point startPoint = new Point(0, 0), endPoint = new Point(0, 12);
-        assertEquals(new Range(startPoint, endPoint, 0, 12), node.getRange());
+        Point startPoint = new Point(0, 0), endPoint = new Point(0, 24);
+        assertEquals(new Range(startPoint, endPoint, 0, 24), node.getRange());
     }
 
     @Test
@@ -116,22 +116,22 @@ class NodeTest {
 
     @Test
     void getEndPoint() {
-        assertEquals(new Point(0, 12), node.getEndPoint());
+        assertEquals(new Point(0, 24), node.getEndPoint());
     }
 
     @Test
     void getChildCount() {
-        assertEquals(1, node.getChildCount());
+        assertEquals(2, node.getChildCount());
     }
 
     @Test
     void getNamedChildCount() {
-        assertEquals(1, node.getNamedChildCount());
+        assertEquals(2, node.getNamedChildCount());
     }
 
     @Test
     void getDescendantCount() {
-        assertEquals(7, node.getDescendantCount());
+        assertEquals(8, node.getDescendantCount());
     }
 
     @Test
@@ -273,8 +273,8 @@ class NodeTest {
 
     @Test
     void getText() {
-        var child = node.getDescendant(6, 9).orElseThrow();
-        assertEquals("Foo", child.getText());
+        var child = node.getChild(1).orElseThrow();
+        assertEquals("// uni©ode", child.getText());
     }
 
     @Test
@@ -298,7 +298,7 @@ class NodeTest {
 
     @Test
     void toSexp() {
-        var sexp = "(program (class_declaration name: (identifier) body: (class_body)))";
+        var sexp = "(program (class_declaration name: (identifier) body: (class_body)) (line_comment))";
         assertEquals(sexp, node.toSexp());
     }
 

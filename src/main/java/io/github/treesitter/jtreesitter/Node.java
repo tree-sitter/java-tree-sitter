@@ -21,6 +21,7 @@ public final class Node {
     private final Tree tree;
     private @Nullable List<Node> children;
     private final Arena arena = Arena.ofAuto();
+    private boolean wasEdited = false;
 
     Node(MemorySegment self, Tree tree) {
         this.self = self;
@@ -409,10 +410,7 @@ public final class Node {
 
     /** Get the source code of the node, if available. */
     public @Nullable String getText() {
-        var text = tree.getText();
-        if (text == null) return null;
-        var endByte = Math.min(getEndByte(), text.length());
-        return text.substring(getStartByte(), endByte);
+        return !wasEdited ? tree.getRegion(getStartByte(), getEndByte()) : null;
     }
 
     /**
@@ -426,6 +424,7 @@ public final class Node {
      */
     public void edit(InputEdit edit) {
         ts_node_edit(self, edit.into(arena));
+        wasEdited = true;
         children = null;
     }
 
