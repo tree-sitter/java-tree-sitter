@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 
 /** A class that defines how to parse a particular language. */
 @NullMarked
-public final class Language {
+public final class Language implements Cloneable {
     /**
      * The latest ABI version that is supported by the current version of the library.
      *
@@ -190,6 +190,17 @@ public final class Language {
      */
     public Query query(String source) throws QueryError {
         return new Query(this, source);
+    }
+
+    /**
+     * Get another reference to the language.
+     *
+     * @since 0.24.0
+     */
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public Language clone() {
+        return new Language(ts_language_copy(self));
     }
 
     @Override

@@ -92,6 +92,6 @@ public class LanguageTest {
     @Test
     void testEquals() {
         var other = new Language(TreeSitterJava.language());
-        assertEquals(language, other);
+        assertEquals(other, language.clone());
     }
 }
