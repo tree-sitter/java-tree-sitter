@@ -40,7 +40,7 @@ jobs:
           java-version: 22
           cache: maven
       - name: Set up tree-sitter
-        uses: tree-sitter/setup-action/lib@v1
+        uses: tree-sitter/setup-action/lib@v2
       - name: Set up tree-sitter-java
         run: |-
           git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java

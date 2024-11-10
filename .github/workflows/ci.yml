@@ -38,7 +38,7 @@ jobs:
       - name: Get tree-sitter commit
         run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
       - name: Set up tree-sitter
-        uses: tree-sitter/setup-action/lib@v1
+        uses: tree-sitter/setup-action/lib@v2
         with:
           tree-sitter-ref: ${{env.TREE_SITTER_REF}}
       - name: Set up tree-sitter-java
@@ -64,7 +64,7 @@ jobs:
           category: spotbugs
           sarif_file: target/reports/spotbugsSarif.json
       - name: Upload JUnit XML report
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v5
         if: "!cancelled()"
         with:
           annotate_only: true
