@@ -1,0 +1,3 @@
+* text=auto eol=lf
+
+scripts/jextract.ps1 eol=crlf

@@ -1,6 +1,6 @@
-#!/usr/bin/env pwsh
-
-$env:package = 'io.github.treesitter.jtreesitter.internal'
+$package = 'io.github.treesitter.jtreesitter.internal'
+$output = "$($args[1])/generated-sources/jextract"
+$lib = "$($args[0])/core/lib"
 
 & jextract.bat `
     --include-struct TSInput `
@@ -177,10 +177,10 @@ $env:package = 'io.github.treesitter.jtreesitter.internal'
     --include-constant TSSymbolTypeRegular `
     --include-constant TSSymbolTypeSupertype `
     --header-class-name TreeSitter `
-    --output "$($args[1])/generated-sources/jextract" `
-    -t $env:package `
+    --output $output `
+    -t $package `
     -l tree-sitter `
-    -I "$($args[0])/core/lib/src" `
-    -I "$($args[0])/core/lib/include" `
+    -I "$lib/src" `
+    -I "$lib/include" `
     -DTREE_SITTER_HIDE_SYMBOLS `
-    "$($args[0])/core/lib/include/tree_sitter/api.h"
+    "$lib/include/tree_sitter/api.h"

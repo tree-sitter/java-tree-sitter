@@ -89,6 +89,11 @@
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
                 </exec>
+                <exec executable="git" dir="${project.build.directory}" failonerror="true">
+                  <arg value="apply"/>
+                  <arg value="--no-index"/>
+                  <arg value="${project.basedir}/scripts/TreeSitter_java.patch"/>
+                </exec>
               </target>
             </configuration>
           </execution>

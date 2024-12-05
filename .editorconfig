@@ -19,3 +19,9 @@ max_line_length = off
 [*.{xml,yml,json}]
 indent_size = 2
 max_line_length = off
+
+[*.ps1]
+end_of_line = crlf
+
+[*.patch]
+trim_trailing_whitespace = false

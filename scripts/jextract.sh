@@ -1,6 +1,8 @@
 #!/bin/bash -eu
 
 package=io.github.treesitter.jtreesitter.internal
+output="$2/generated-sources/jextract"
+lib="$1/core/lib"
 
 exec jextract \
     --include-struct TSInput \
@@ -178,10 +180,10 @@ exec jextract \
     --include-constant TSSymbolTypeRegular \
     --include-constant TSSymbolTypeSupertype \
     --header-class-name TreeSitter \
-    --output "$2"/generated-sources/jextract \
+    --output "$output" \
     -t "$package" \
     -l tree-sitter \
-    -I "$1"/core/lib/src \
-    -I "$1"/core/lib/include \
+    -I "$lib/src" \
+    -I "$lib/include" \
     -DTREE_SITTER_HIDE_SYMBOLS \
-    "$1"/core/lib/include/tree_sitter/api.h
+    "$lib/include/tree_sitter/api.h"
