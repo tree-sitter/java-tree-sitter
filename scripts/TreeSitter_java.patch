@@ -1,23 +1,14 @@
 --- a/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
 +++ b/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
-@@ -55,9 +55,16 @@ public class TreeSitter {
+@@ -55,9 +55,7 @@
          };
      }
-
+ 
 -    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("tree-sitter"), LIBRARY_ARENA)
 -            .or(SymbolLookup.loaderLookup())
 -            .or(Linker.nativeLinker().defaultLookup());
-+    static final SymbolLookup SYMBOL_LOOKUP = findLibrary().or(Linker.nativeLinker().defaultLookup());
-+
-+    private static final SymbolLookup findLibrary() {
-+        try {
-+            String library = System.mapLibraryName("tree-sitter");
-+            return SymbolLookup.libraryLookup(library, LIBRARY_ARENA);
-+        } catch (IllegalArgumentException e) {
-+            return SymbolLookup.loaderLookup();
-+        }
-+    }
-
++    static final SymbolLookup SYMBOL_LOOKUP = ChainedLibraryLookup.INSTANCE.get(LIBRARY_ARENA);
+ 
      public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
      public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
 @@ -8599,4 +8606,8 @@ public class TreeSitter {
