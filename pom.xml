@@ -81,7 +81,8 @@
               <skip>${jextract.skip}</skip>
               <target name="jextract">
                 <echo level="info">Generating sources using jextract</echo>
-                <exec osfamily="windows" executable="${project.basedir}/scripts/jextract.ps1" failonerror="true">
+                <exec osfamily="windows" executable="powershell" failonerror="true">
+                  <arg value="${project.basedir}/scripts/jextract.ps1"/>
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
                 </exec>

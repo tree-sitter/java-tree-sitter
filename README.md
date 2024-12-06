@@ -15,6 +15,9 @@ Java bindings to the [tree-sitter] parsing library.
 git clone https://github.com/tree-sitter/java-tree-sitter
 cd java-tree-sitter
 git submodule init
+git submodule update
+# build tree-sitter and tree-sitter-java native libraries,
+# for example by replicating the steps in .github/workflows/ci.yml
 mvn test
 ```
 
