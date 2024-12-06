@@ -10,6 +10,7 @@ import java.lang.foreign.SymbolLookup;
  *
  * @see java.util.ServiceLoader
  */
+@FunctionalInterface
 public interface NativeLibraryLookup {
     /**
      * Returns the {@link SymbolLookup} to be used for the tree-sitter native library.

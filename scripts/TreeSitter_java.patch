@@ -1,5 +1,5 @@
---- a/target/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java	
-+++ b/target/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
+--- a/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
++++ b/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
 @@ -55,9 +55,7 @@
          };
      }
