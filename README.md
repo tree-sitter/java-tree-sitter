@@ -10,11 +10,12 @@ Java bindings to the [tree-sitter] parsing library.
 
 - Install JDK 22 and set `JAVA_HOME` to it
 - Download [jextract] and add it to your `PATH`
+- Install the `tree-sitter` & `tree-sitter-java` libraries
 
 ```bash
 git clone https://github.com/tree-sitter/java-tree-sitter
 cd java-tree-sitter
-git submodule init
+git submodule update --init
 mvn test
 ```
 
