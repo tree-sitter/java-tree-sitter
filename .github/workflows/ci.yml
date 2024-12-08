@@ -6,11 +6,13 @@ on:
     paths:
       - pom.xml
       - src/**
+      - .github/workflows/ci.yml
   pull_request:
     branches: [master]
     paths:
       - pom.xml
       - src/**
+      - .github/workflows/ci.yml
 
 concurrency:
   cancel-in-progress: true
@@ -23,7 +25,11 @@ permissions:
 jobs:
   test:
     name: Test package
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{matrix.target}}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,22 +42,41 @@ jobs:
           java-version: 22
           cache: maven
       - name: Get tree-sitter commit
+        shell: sh
         run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
-      - name: Set up tree-sitter
+      - name: Set up tree-sitter CLI
+        if: runner.os == 'Windows'
+        uses: tree-sitter/setup-action/cli@v2
+      - name: Set up tree-sitter library
         uses: tree-sitter/setup-action/lib@v2
         with:
           tree-sitter-ref: ${{env.TREE_SITTER_REF}}
       - name: Set up tree-sitter-java
+        shell: bash
         run: |-
           git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java
-          make -Ctree-sitter-java all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
+          cd tree-sitter-java
+          cmake -B build \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_LIBDIR=lib \
+            -DCMAKE_INSTALL_BINDIR=lib \
+            -DCMAKE_INSTALL_PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
+          cmake --build build && cmake --install build --config Debug
       - name: Set up jextract
+        shell: bash
         run: |-
-          curl -LSs '${{env.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          if [[ $RUNNER_OS == Linux ]]; then
+            JEXTRACT_URL+=_linux-x64_bin.tar.gz
+          elif [[ $RUNNER_OS == macOS ]]; then
+            JEXTRACT_URL+=_macos-aarch64_bin.tar.gz
+          else
+            JEXTRACT_URL+=_windows-x64_bin.tar.gz
+          fi
+          curl -LSs "$JEXTRACT_URL" | tar xzf - -C "$RUNNER_TOOL_CACHE"
           printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
         env:
           # NOTE: keep this in sync with deploy, docs
-          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_linux-x64_bin.tar.gz
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47
       - name: Run tests
         run: mvn --no-transfer-progress test
       - name: Patch SpotBugs SARIF report

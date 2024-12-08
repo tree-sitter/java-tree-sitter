@@ -44,7 +44,7 @@ jobs:
           printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
         env:
           # NOTE: keep this in sync with ci, docs
-          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_linux-x64_bin.tar.gz
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-x64_bin.tar.gz
       - name: Deploy to Maven Central
         run: mvn --no-transfer-progress deploy -Dspotbugs.skip=true
         env:
