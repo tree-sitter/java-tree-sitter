@@ -23,6 +23,9 @@ public final class Node {
     private final Arena arena = Arena.ofAuto();
     private boolean wasEdited = false;
 
+    // FIXME: figure out why free() crashes on Windows
+    private static final boolean IS_UNIX = !System.getProperty("os.name").startsWith("Windows");
+
     Node(MemorySegment self, Tree tree) {
         this.self = self;
         this.tree = tree;
@@ -437,7 +440,7 @@ public final class Node {
     public String toSexp() {
         var string = ts_node_string(self);
         var result = string.getString(0);
-        free(string);
+        if (IS_UNIX) free(string);
         return result;
     }
 
