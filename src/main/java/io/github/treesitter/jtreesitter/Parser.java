@@ -326,7 +326,7 @@ public final class Parser implements AutoCloseable {
     /** A class representing a cancellation flag. */
     public static class CancellationFlag {
         private final Arena arena = Arena.ofAuto();
-        private final MemorySegment segment = arena.allocate(C_LONG);
+        private final MemorySegment segment = arena.allocate(C_LONG_LONG);
         private final AtomicLong value = new AtomicLong();
 
         /** Creates an uninitialized cancellation flag. */
@@ -341,7 +341,7 @@ public final class Parser implements AutoCloseable {
         @SuppressWarnings("unused")
         public void set(long value) {
             // NOTE: can't use _ because of palantir/palantir-java-format#934
-            segment.set(C_LONG, 0, this.value.updateAndGet(o -> value));
+            segment.set(C_LONG_LONG, 0L, this.value.updateAndGet(o -> value));
         }
     }
 }
