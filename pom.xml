@@ -81,11 +81,18 @@
               <skip>${jextract.skip}</skip>
               <target name="jextract">
                 <echo level="info">Generating sources using jextract</echo>
-                <exec osfamily="windows" executable="${project.basedir}/scripts/jextract.ps1" failonerror="true">
+                <exec osfamily="windows" executable="powershell" failonerror="true">
+                  <arg value="-NoProfile"/>
+                  <arg value="-ExecutionPolicy"/>
+                  <arg value="bypass"/>
+                  <arg value="-File"/>
+                  <arg value="${project.basedir}/scripts/jextract.ps1"/>
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
                 </exec>
-                <exec osfamily="unix" executable="${project.basedir}/scripts/jextract.sh" failonerror="true">
+                <exec osfamily="unix" executable="bash" failonerror="true">
+                  <arg value="-eu"/>
+                  <arg value="${project.basedir}/scripts/jextract.sh"/>
                   <arg value="${project.basedir}"/>
                   <arg value="${project.build.directory}"/>
                 </exec>
