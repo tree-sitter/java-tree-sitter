@@ -5,6 +5,7 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 import io.github.treesitter.jtreesitter.internal.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -480,10 +481,12 @@ public final class Query implements AutoCloseable {
     /**
      * Iterate over all the matches in the order that they were found.
      *
+     * @implNote The lifetime of the matches is bound to that of the query.
+     *
      * @param node The node that the query will run on.
      */
     public Stream<QueryMatch> findMatches(Node node) {
-        return findMatches(node, null);
+        return findMatches(node, arena, null);
     }
 
     /**
@@ -500,14 +503,26 @@ public final class Query implements AutoCloseable {
      *  });
      * }
      *
+     * @implNote The lifetime of the matches is bound to that of the query.
+     *
      * @param node The node that the query will run on.
      * @param predicate A function that handles custom predicates.
      */
     public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
+        return findMatches(node, arena, predicate);
+    }
+
+    /**
+     * Iterate over all the matches in the order that they were found, using the given allocator.
+     *
+     * @see #findMatches(Node, BiPredicate)
+     */
+    public Stream<QueryMatch> findMatches(
+            Node node, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         try (var alloc = Arena.ofConfined()) {
             ts_query_cursor_exec(cursor, query, node.copy(alloc));
         }
-        return StreamSupport.stream(new MatchesIterator(node.getTree(), predicate), false);
+        return StreamSupport.stream(new MatchesIterator(node.getTree(), allocator, predicate), false);
     }
 
     @Override
@@ -537,11 +552,14 @@ public final class Query implements AutoCloseable {
     private final class MatchesIterator extends Spliterators.AbstractSpliterator<QueryMatch> {
         private final @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate;
         private final Tree tree;
+        private final SegmentAllocator allocator;
 
-        public MatchesIterator(Tree tree, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
+        public MatchesIterator(
+                Tree tree, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
             super(Long.MAX_VALUE, Spliterator.IMMUTABLE | Spliterator.NONNULL);
             this.predicate = predicate;
             this.tree = tree;
+            this.allocator = allocator;
         }
 
         @Override
@@ -555,7 +573,7 @@ public final class Query implements AutoCloseable {
                 for (int i = 0; i < count; ++i) {
                     var capture = TSQueryCapture.asSlice(matchCaptures, i);
                     var name = captureNames.get(TSQueryCapture.index(capture));
-                    var node = TSNode.allocate(arena).copyFrom(TSQueryCapture.node(capture));
+                    var node = TSNode.allocate(allocator).copyFrom(TSQueryCapture.node(capture));
                     captureList.add(new QueryCapture(name, new Node(node, tree)));
                 }
                 var patternIndex = TSQueryMatch.pattern_index(match);
