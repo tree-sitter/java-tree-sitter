@@ -4,6 +4,7 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.util.OptionalInt;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -36,13 +37,27 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
         node = cursor.node;
     }
 
-    /** Get the current node of the cursor. */
+    /**
+     * Get the current node of the cursor.
+     *
+     * @implNote The node will become invalid once the cursor is closed.
+     */
     public Node getCurrentNode() {
         if (this.node == null) {
             var node = ts_tree_cursor_current_node(arena, self);
             this.node = new Node(node, tree);
         }
         return this.node;
+    }
+
+    /**
+     * Get the current node of the cursor using the given allocator.
+     *
+     * @since 0.25.0
+     */
+    public Node getCurrentNode(SegmentAllocator allocator) {
+        var node = ts_tree_cursor_current_node(allocator, self);
+        return new Node(node, tree);
     }
 
     /**
