@@ -4,6 +4,7 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.util.OptionalInt;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -14,7 +15,6 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
     private final MemorySegment self;
     private final Arena arena;
     private final Tree tree;
-    private @Nullable Node node;
 
     TreeCursor(Node node, Tree tree) {
         arena = Arena.ofShared();
@@ -33,16 +33,25 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
         arena = Arena.ofShared();
         self = ts_tree_cursor_copy(arena, cursor.self);
         tree = cursor.tree.clone();
-        node = cursor.node;
     }
 
-    /** Get the current node of the cursor. */
+    /**
+     * Get the current node of the cursor. Its native memory will be managed by the cursor. It will become invalid
+     * once the cursor is closed by calling {@link #close()}.
+     * @return the current node
+     */
     public Node getCurrentNode() {
-        if (this.node == null) {
-            var node = ts_tree_cursor_current_node(arena, self);
-            this.node = new Node(node, tree);
-        }
-        return this.node;
+        return getCurrentNode(arena);
+    }
+
+    /**
+     * Get the current node of the cursor. Its native memory will be managed by the given allocator.
+     * @param allocator the allocator to use for managing the native memory of the node
+     * @return the current node
+     */
+    public Node getCurrentNode(SegmentAllocator allocator) {
+        var node = ts_tree_cursor_current_node(allocator, self);
+        return new Node(node, tree);
     }
 
     /**
@@ -88,9 +97,7 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
      *         {@code false} if there were no children.
      */
     public boolean gotoFirstChild() {
-        var result = ts_tree_cursor_goto_first_child(self);
-        if (result) node = null;
-        return result;
+        return ts_tree_cursor_goto_first_child(self);
     }
 
     /**
@@ -100,9 +107,7 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
      *         {@code false} if there were no children.
      */
     public boolean gotoLastChild() {
-        var result = ts_tree_cursor_goto_last_child(self);
-        if (result) node = null;
-        return result;
+        return ts_tree_cursor_goto_last_child(self);
     }
 
     /**
@@ -112,9 +117,7 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
      *         {@code false} if there was no parent node.
      */
     public boolean gotoParent() {
-        var result = ts_tree_cursor_goto_parent(self);
-        if (result) node = null;
-        return result;
+        return ts_tree_cursor_goto_parent(self);
     }
 
     /**
@@ -124,9 +127,7 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
      *         {@code false} if there was no next sibling node.
      */
     public boolean gotoNextSibling() {
-        var result = ts_tree_cursor_goto_next_sibling(self);
-        if (result) node = null;
-        return result;
+        return ts_tree_cursor_goto_next_sibling(self);
     }
 
     /**
@@ -136,9 +137,7 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
      *         {@code false} if there was no previous sibling node.
      */
     public boolean gotoPreviousSibling() {
-        var result = ts_tree_cursor_goto_previous_sibling(self);
-        if (result) node = null;
-        return result;
+        return ts_tree_cursor_goto_previous_sibling(self);
     }
 
     /**
@@ -149,7 +148,7 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
      */
     public void gotoDescendant(@Unsigned int index) {
         ts_tree_cursor_goto_descendant(self, index);
-        node = null;
+
     }
 
     /**
@@ -161,7 +160,6 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
     public @Unsigned OptionalInt gotoFirstChildForByte(@Unsigned int offset) {
         var index = ts_tree_cursor_goto_first_child_for_byte(self, offset);
         if (index == -1L) return OptionalInt.empty();
-        node = null;
         return OptionalInt.of((int) index);
     }
 
@@ -176,7 +174,6 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
             var goal = point.into(arena);
             var index = ts_tree_cursor_goto_first_child_for_point(self, goal);
             if (index == -1L) return OptionalInt.empty();
-            node = null;
             return OptionalInt.of((int) index);
         }
     }
@@ -185,15 +182,12 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
     public void reset(Node node) {
         try (var arena = Arena.ofConfined()) {
             ts_tree_cursor_reset(self, node.copy(arena));
-        } finally {
-            this.node = null;
         }
     }
 
     /** Reset the cursor to start at the same position as another cursor. */
     public void reset(TreeCursor cursor) {
         ts_tree_cursor_reset_to(self, cursor.self);
-        this.node = null;
     }
 
     /** Create a shallow copy of the tree cursor. */
