@@ -3,7 +3,13 @@ package io.github.treesitter.jtreesitter;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
-import org.junit.jupiter.api.*;
+import java.lang.foreign.Arena;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class TreeCursorTest {
     private static Tree tree;
@@ -37,6 +43,15 @@ class TreeCursorTest {
         var node = cursor.getCurrentNode();
         assertEquals(tree.getRootNode(), node);
         assertSame(node, cursor.getCurrentNode());
+
+        try (var arena = Arena.ofConfined()) {
+            try (var copy = cursor.clone()) {
+                node = copy.getCurrentNode(arena);
+                assertEquals(node, tree.getRootNode());
+            }
+            // can still access node after cursor was closed
+            assertEquals(node, tree.getRootNode());
+        }
     }
 
     @Test
