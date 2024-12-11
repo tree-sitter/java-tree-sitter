@@ -5,6 +5,7 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 import io.github.treesitter.jtreesitter.internal.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -478,16 +479,19 @@ public final class Query implements AutoCloseable {
     }
 
     /**
-     * Iterate over all the matches in the order that they were found.
+     * Iterate over all the matches in the order that they were found. The lifetime of the native memory of the returned
+     * matches is bound to the lifetime of this query object.
      *
      * @param node The node that the query will run on.
      */
     public Stream<QueryMatch> findMatches(Node node) {
-        return findMatches(node, null);
+        return findMatches(node, null, arena);
     }
 
+
     /**
-     * Iterate over all the matches in the order that they were found.
+     * Iterate over all the matches in the order that they were found. The lifetime of the native memory of the returned
+     * matches is bound to the lifetime of this query object.
      *
      * <h4 id="findMatches-example">Predicate Example</h4>
      * <p>
@@ -503,11 +507,24 @@ public final class Query implements AutoCloseable {
      * @param node The node that the query will run on.
      * @param predicate A function that handles custom predicates.
      */
-    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
+    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate){
+        return findMatches(node, predicate, arena);
+    }
+
+
+    /**
+     * Like {@link #findMatches(Node, BiPredicate)} but the native memory of the returned matches is created using the
+     * given allocator.
+     *
+     * @param node The node that the query will run on.
+     * @param predicate A function that handles custom predicates.
+     * @param allocator The allocator that is used to allocate the native memory of the returned matches.
+     */
+    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate, SegmentAllocator allocator) {
         try (var alloc = Arena.ofConfined()) {
             ts_query_cursor_exec(cursor, query, node.copy(alloc));
         }
-        return StreamSupport.stream(new MatchesIterator(node.getTree(), predicate), false);
+        return StreamSupport.stream(new MatchesIterator(node.getTree(), predicate, allocator), false);
     }
 
     @Override
@@ -537,11 +554,13 @@ public final class Query implements AutoCloseable {
     private final class MatchesIterator extends Spliterators.AbstractSpliterator<QueryMatch> {
         private final @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate;
         private final Tree tree;
+        private final SegmentAllocator allocator;
 
-        public MatchesIterator(Tree tree, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
+        public MatchesIterator(Tree tree, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate, SegmentAllocator allocator) {
             super(Long.MAX_VALUE, Spliterator.IMMUTABLE | Spliterator.NONNULL);
             this.predicate = predicate;
             this.tree = tree;
+            this.allocator = allocator;
         }
 
         @Override
@@ -555,7 +574,7 @@ public final class Query implements AutoCloseable {
                 for (int i = 0; i < count; ++i) {
                     var capture = TSQueryCapture.asSlice(matchCaptures, i);
                     var name = captureNames.get(TSQueryCapture.index(capture));
-                    var node = TSNode.allocate(arena).copyFrom(TSQueryCapture.node(capture));
+                    var node = TSNode.allocate(allocator).copyFrom(TSQueryCapture.node(capture));
                     captureList.add(new QueryCapture(name, new Node(node, tree)));
                 }
                 var patternIndex = TSQueryMatch.pattern_index(match);
