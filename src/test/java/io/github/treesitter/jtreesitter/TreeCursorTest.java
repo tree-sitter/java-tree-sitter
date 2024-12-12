@@ -31,9 +31,7 @@ class TreeCursorTest {
 
     @AfterEach
     void tearDown() {
-        if(cursor != null){
-            cursor.close();
-        }
+        cursor.close();
     }
 
     @Test
@@ -45,16 +43,15 @@ class TreeCursorTest {
 
     @Test
     void getCurrentNodeWithCustomAllocator() {
-
-        try(var arena = Arena.ofConfined()){
-            var node = cursor.getCurrentNode(arena);
-            assertEquals(tree.getRootNode(), node);
-            cursor.close();
-            cursor = null; // avoid double close
+        try (var arena = Arena.ofConfined()) {
+            Node node;
+            try (TreeCursor copied = cursor.clone()) {
+                node = copied.getCurrentNode(arena);
+                assertEquals(tree.getRootNode(), node);
+            }
             // can still access node after cursor was closed
             assertEquals(tree.getRootNode(), node);
         }
-
     }
 
     @Test
