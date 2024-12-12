@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
 import org.junit.jupiter.api.*;
 
+import java.lang.foreign.Arena;
+
 class TreeCursorTest {
     private static Tree tree;
     private TreeCursor cursor;
@@ -37,6 +39,19 @@ class TreeCursorTest {
         var node = cursor.getCurrentNode();
         assertEquals(tree.getRootNode(), node);
         assertSame(node, cursor.getCurrentNode());
+    }
+
+    @Test
+    void getCurrentNodeWithCustomAllocator() {
+        try (var arena = Arena.ofConfined()) {
+            Node node;
+            try (TreeCursor copied = cursor.clone()) {
+                node = copied.getCurrentNode(arena);
+                assertEquals(tree.getRootNode(), node);
+            }
+            // can still access node after cursor was closed
+            assertEquals(tree.getRootNode(), node);
+        }
     }
 
     @Test
