@@ -40,6 +40,7 @@ class TreeCursorTest {
     void getCurrentNode() {
         var node = cursor.getCurrentNode();
         assertEquals(tree.getRootNode(), node);
+        assertSame(node, cursor.getCurrentNode());
     }
 
     @Test
