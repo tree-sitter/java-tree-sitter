@@ -58,9 +58,19 @@ public final class Tree implements AutoCloseable, Cloneable {
         return language;
     }
 
-    /** Get the source code of the syntax tree, if available. */
+    /** Get the source code of the syntax tree parsed as a string, if available. */
     public @Nullable String getText() {
         return charset != null ? new String(source, charset) : null;
+    }
+
+    /** Get the source code of the syntax tree as raw bytes, if available. */
+    public byte @Nullable [] getSourceBytes() {
+        return source;
+    }
+
+    /** Get the charset of the source code bytes, if available. */
+    public @Nullable Charset getCharset() {
+        return charset;
     }
 
     /** Get the root node of the syntax tree. */
