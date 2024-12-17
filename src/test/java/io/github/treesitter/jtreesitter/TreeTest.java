@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class TreeTest {
     private static final String source = "class Foo {}";
@@ -43,6 +45,19 @@ class TreeTest {
     @Test
     void getText() {
         assertEquals(source, tree.getText());
+    }
+
+    @Test
+    void getSourceBytes() {
+        assertArrayEquals(source.getBytes(tree.getCharset()), tree.getSourceBytes());
+    }
+
+    @ParameterizedTest
+    @EnumSource(InputEncoding.class)
+    void getCharset(InputEncoding encoding) {
+        try (Tree t = parser.parse(source, encoding).orElseThrow()) {
+            assertEquals(encoding.charset(), t.getCharset());
+        }
     }
 
     @Test
