@@ -148,7 +148,7 @@ public final class Tree implements AutoCloseable, Cloneable {
         try (var alloc = Arena.ofConfined()) {
             ts_tree_edit(self, edit.into(alloc));
         } finally {
-            source = new byte[0];
+            source = null;
             charset = null;
         }
     }
