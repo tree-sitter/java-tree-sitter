@@ -244,7 +244,7 @@ public final class Parser implements AutoCloseable {
             var old = oldTree == null ? MemorySegment.NULL : oldTree.segment();
             var tree = ts_parser_parse_string_encoding(self, old, string, bytes.length, encoding.ordinal());
             if (tree.equals(MemorySegment.NULL)) return Optional.empty();
-            return Optional.of(new Tree(tree, language, source, encoding.charset()));
+            return Optional.of(new Tree(tree, language, bytes, encoding.charset()));
         }
     }
 

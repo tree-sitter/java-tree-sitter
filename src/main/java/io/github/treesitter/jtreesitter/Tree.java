@@ -16,7 +16,7 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public final class Tree implements AutoCloseable, Cloneable {
     private final MemorySegment self;
-    private byte[] source;
+    private byte @Nullable [] source;
     private @Nullable Charset charset;
     private final Arena arena;
     private final Language language;
@@ -25,11 +25,11 @@ public final class Tree implements AutoCloseable, Cloneable {
     // FIXME: figure out why free() crashes on Windows
     private static final boolean IS_UNIX = !System.getProperty("os.name").startsWith("Windows");
 
-    Tree(MemorySegment self, Language language, @Nullable String source, @Nullable Charset charset) {
+    Tree(MemorySegment self, Language language, byte @Nullable [] source, @Nullable Charset charset) {
         arena = Arena.ofShared();
         this.self = self.reinterpret(arena, TreeSitter::ts_tree_delete);
         this.language = language;
-        this.source = source != null && charset != null ? source.getBytes(charset) : new byte[0];
+        this.source = source;
         this.charset = charset;
     }
 
@@ -49,6 +49,9 @@ public final class Tree implements AutoCloseable, Cloneable {
 
     @Nullable
     String getRegion(@Unsigned int start, @Unsigned int end) {
+        if (source == null) {
+            return null;
+        }
         var length = Math.min(end, source.length) - start;
         return charset != null ? new String(source, start, length, charset) : null;
     }
