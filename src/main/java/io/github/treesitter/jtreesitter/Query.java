@@ -485,7 +485,7 @@ public final class Query implements AutoCloseable {
      * @param node The node that the query will run on.
      */
     public Stream<QueryMatch> findMatches(Node node) {
-        return findMatches(node, null, arena);
+        return findMatches(node, arena, null);
     }
 
 
@@ -508,7 +508,7 @@ public final class Query implements AutoCloseable {
      * @param predicate A function that handles custom predicates.
      */
     public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate){
-        return findMatches(node, predicate, arena);
+        return findMatches(node, arena, predicate);
     }
 
 
@@ -517,10 +517,10 @@ public final class Query implements AutoCloseable {
      * given allocator.
      *
      * @param node The node that the query will run on.
-     * @param predicate A function that handles custom predicates.
      * @param allocator The allocator that is used to allocate the native memory of the returned matches.
+     * @param predicate A function that handles custom predicates.
      */
-    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate, SegmentAllocator allocator) {
+    public Stream<QueryMatch> findMatches(Node node, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         try (var alloc = Arena.ofConfined()) {
             ts_query_cursor_exec(cursor, query, node.copy(alloc));
         }
