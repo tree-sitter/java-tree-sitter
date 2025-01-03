@@ -478,10 +478,21 @@ public final class Query implements AutoCloseable {
     }
 
 
+    /**
+     * Execute the query on a given node.
+     * @param node The node that the query will run on.
+     * @return A cursor that can be used to iterate over the matches.
+     */
     public QueryCursor execute(Node node){
         return new QueryCursor(this, node, cursorOptions);
     }
 
+    /**
+     * Execute the query on a given node with the given options. The options override the default options set on the query.
+     * @param node The node that the query will run on.
+     * @param options The options that will be used for this query.
+     * @return A cursor that can be used to iterate over the matches.
+     */
     public QueryCursor execute(Node node, QueryCursorOptions options){
         return new QueryCursor(this, node, options);
     }
@@ -504,19 +515,20 @@ public final class Query implements AutoCloseable {
      *
      * <h4 id="findMatches-example">Predicate Example</h4>
      * <p>
-     * {@snippet lang="java" :
+     * {@snippet lang = "java":
      * Stream<QueryMatch> matches = query.findMatches(tree.getRootNode(), (predicate, match) -> {
      *      if (!predicate.getName().equals("ieq?")) return true;
      *      List<QueryPredicateArg> args = predicate.getArgs();
      *      Node node = match.findNodes(args.getFirst().value()).getFirst();
      *      return args.getLast().value().equalsIgnoreCase(node.getText());
      *  });
-     * }
+     *}
      *
-     * @param node The node that the query will run on.
+     * @param node      The node that the query will run on.
      * @param predicate A function that handles custom predicates.
+     * @implNote The stream is not created lazily such that there is no open {@link QueryCursor} instance left behind. For creating a lazy stream use {@link #execute(Node)} and {@link QueryCursor#stream(BiPredicate)}.
      */
-    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate){
+    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         return findMatches(node, arena, predicate);
     }
 
@@ -531,7 +543,9 @@ public final class Query implements AutoCloseable {
      */
     public Stream<QueryMatch> findMatches(Node node, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         try(QueryCursor cursor = this.execute(node)){
-            return cursor.stream(allocator, predicate);
+            // make sure to load the entire stream into memory before closing the cursor.
+            // Otherwise, we call for nextMatch after closing the cursor which leads to undefined behavior.
+            return cursor.stream(allocator, predicate).toList().stream();
         }
     }
 

@@ -37,14 +37,14 @@ public class QueryCursor implements AutoCloseable{
     private final Arena arena;
 
     private final Query query;
-    private final Node cursorRootNode;
+    private final Tree tree;
 
 
     QueryCursor(Query query, Node cursorRootNode, @Nullable QueryCursorOptions options){
         arena = Arena.ofConfined();
         cursor = ts_query_cursor_new().reinterpret(arena, TreeSitter::ts_query_cursor_delete);
         this.query = query;
-        this.cursorRootNode = cursorRootNode;
+        this.tree = cursorRootNode.getTree();
         if(options != null){
             applyOptions(options);
         }
@@ -79,7 +79,6 @@ public class QueryCursor implements AutoCloseable{
         if (options.getTimeoutMicros() >= 0) {
             ts_query_cursor_set_timeout_micros(cursor, options.getTimeoutMicros());
         }
-
     }
 
 
@@ -117,30 +116,61 @@ public class QueryCursor implements AutoCloseable{
         ts_query_cursor_remove_match(cursor, matchId);
     }
 
+    /**
+     * Stream the matches produced by the query. The stream can not be consumed after the cursor is closed. The native
+     * nodes backing the matches are bound to the lifetime of the cursor.
+     * @return a stream of matches
+     */
     public Stream<QueryMatch> stream() {
         return stream(null);
     }
 
+    /**
+     * Like {@link #stream()} but allows for custom predicates to be applied to the matches.
+     * @param predicate a function to handle custom predicates.
+     * @return a stream of matches
+     */
     public Stream<QueryMatch> stream(@Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         return stream(arena , predicate);
     }
 
+    /**
+     * Like {@link #stream(BiPredicate)} but allows for a custom allocator to be used for allocating the native nodes.
+     * @param allocator allocator to use for allocating the native nodes backing the matches
+     * @param predicate a function to handle custom predicates.
+     * @return a stream of matches
+     */
     public Stream<QueryMatch> stream(SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         return StreamSupport.stream(new MatchesIterator(this, allocator, predicate), false);
     }
 
 
+    /**
+     * Get the next match produced by the query. The native nodes backing the match are bound to the lifetime of the cursor.
+     * @return the next match, if available
+     */
     public Optional<QueryMatch> nextMatch() {
         return nextMatch(null);
     }
 
+    /**
+     * Like {@link #nextMatch()} but allows for custom predicates to be applied to the matches.
+     * @param predicate a function to handle custom predicates.
+     * @return the next match, if available
+     */
     public Optional<QueryMatch> nextMatch(@Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         return nextMatch(arena, predicate);
     }
 
+    /**
+     * Like {@link #nextMatch(BiPredicate)} but allows for a custom allocator to be used for allocating the native nodes.
+     * @param allocator allocator to use for allocating the native nodes backing the matches
+     * @param predicate a function to handle custom predicates.
+     * @return the next match, if available
+     */
     public Optional<QueryMatch> nextMatch(SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
 
-        var hasNoText = cursorRootNode.getTree().getText() == null;
+        var hasNoText = tree.getText() == null;
         MemorySegment match = arena.allocate(TSQueryMatch.layout());
         while (ts_query_cursor_next_match(cursor, match)) {
             var count = Short.toUnsignedInt(TSQueryMatch.capture_count(match));
@@ -150,11 +180,13 @@ public class QueryCursor implements AutoCloseable{
                 var capture = TSQueryCapture.asSlice(matchCaptures, i);
                 var name = query.getCaptureNames().get(TSQueryCapture.index(capture));
                 var node = TSNode.allocate(allocator).copyFrom(TSQueryCapture.node(capture));
-                captureList.add(new QueryCapture(name, new Node(node, this.cursorRootNode.getTree())));
+                captureList.add(new QueryCapture(name, new Node(node, tree)));
             }
             var patternIndex = TSQueryMatch.pattern_index(match);
             var matchId = TSQueryMatch.id(match);
-            var result = new QueryMatch(matchId, patternIndex, captureList);
+            // we copy all the data. So we can directly remove the match from the cursor to free memory.
+            ts_query_cursor_remove_match(cursor, matchId);
+            var result = new QueryMatch(patternIndex, captureList);
             if (hasNoText || matches(predicate, result)) {
                 return Optional.of(result);
             }
@@ -190,6 +222,11 @@ public class QueryCursor implements AutoCloseable{
         }
         @Override
         public boolean tryAdvance(Consumer<? super QueryMatch> action) {
+
+            if(!cursor.arena.scope().isAlive()){
+                throw new IllegalStateException("Cursor is closed. Cannot produce more matches.");
+            }
+
             Optional<QueryMatch> queryMatch = cursor.nextMatch(allocator, predicate);
             queryMatch.ifPresent(action);
             return queryMatch.isPresent();
