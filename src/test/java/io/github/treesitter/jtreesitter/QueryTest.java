@@ -133,11 +133,6 @@ class QueryTest {
     }
 
     @Test
-    void didExceedMatchLimit() {
-        assertQuery(query -> assertFalse(query.didExceedMatchLimit()));
-    }
-
-    @Test
     void disablePattern() {
         assertQuery(query -> {
             assertDoesNotThrow(() -> query.disablePattern(1));

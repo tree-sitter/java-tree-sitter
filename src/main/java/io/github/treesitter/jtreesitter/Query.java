@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
-
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -25,7 +24,7 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public final class Query implements AutoCloseable {
     private final MemorySegment query;
-    private final QueryCursorOptions cursorOptions = new QueryCursorOptions();
+    private final QueryCursorConfig cursorConfig = new QueryCursorConfig();
     private final Arena arena;
     private final Language language;
     private final String source;
@@ -261,7 +260,7 @@ public final class Query implements AutoCloseable {
         return !(Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == '.' || c == '?' || c == '!');
     }
 
-    MemorySegment self(){
+    MemorySegment self() {
         return query;
     }
 
@@ -275,30 +274,30 @@ public final class Query implements AutoCloseable {
         return ts_query_capture_count(query);
     }
 
-    public List<List<QueryPredicate>> getPredicates(){
+    public List<List<QueryPredicate>> getPredicates() {
         return predicates.stream().map(Collections::unmodifiableList).toList();
     }
 
-    public List<String> getCaptureNames(){
+    public List<String> getCaptureNames() {
         return Collections.unmodifiableList(captureNames);
     }
 
     /**
-     * Get the maximum number of in-progress matches.
+     * Get the maximum number of in-progress matches of the default {@link QueryCursorConfig}
      *
      * @apiNote Defaults to {@code -1} (unlimited).
      */
     public @Unsigned int getMatchLimit() {
-        return cursorOptions.getMatchLimit();
+        return cursorConfig.getMatchLimit();
     }
 
     /**
-     * Get the maximum number of in-progress matches.
+     * Set the maximum number of in-progress matches of the default {@link QueryCursorConfig}
      *
      * @throws IllegalArgumentException If {@code matchLimit == 0}.
      */
     public Query setMatchLimit(@Unsigned int matchLimit) throws IllegalArgumentException {
-        cursorOptions.setMatchLimit(matchLimit);
+        cursorConfig.setMatchLimit(matchLimit);
         return this;
     }
 
@@ -308,9 +307,11 @@ public final class Query implements AutoCloseable {
      *
      * @apiNote Defaults to {@code 0} (unlimited).
      * @since 0.23.1
+     * @deprecated
      */
+    @Deprecated(forRemoval = true)
     public @Unsigned long getTimeoutMicros() {
-        return cursorOptions.getTimeoutMicros();
+        return cursorConfig.getTimeoutMicros();
     }
 
     /**
@@ -318,9 +319,11 @@ public final class Query implements AutoCloseable {
      * execution should be allowed to take before halting.
      *
      * @since 0.23.1
+     * @deprecated
      */
+    @Deprecated(forRemoval = true)
     public Query setTimeoutMicros(@Unsigned long timeoutMicros) {
-        cursorOptions.setTimeoutMicros(timeoutMicros);
+        cursorConfig.setTimeoutMicros(timeoutMicros);
         return this;
     }
 
@@ -331,24 +334,21 @@ public final class Query implements AutoCloseable {
      * <br>Note that if a pattern includes many children, then they will still be checked.
      */
     public Query setMaxStartDepth(@Unsigned int maxStartDepth) {
-        cursorOptions.setMaxStartDepth(maxStartDepth);
+        cursorConfig.setMaxStartDepth(maxStartDepth);
         return this;
     }
 
     /** Set the range of bytes in which the query will be executed. */
     public Query setByteRange(@Unsigned int startByte, @Unsigned int endByte) {
-        cursorOptions.setStartByte(startByte);
-        cursorOptions.setEndByte(endByte);
+        cursorConfig.setByteRange(startByte, endByte);
         return this;
     }
 
     /** Set the range of points in which the query will be executed. */
     public Query setPointRange(Point startPoint, Point endPoint) {
-        cursorOptions.setStartPoint(startPoint);
-        cursorOptions.setEndPoint(endPoint);
+        cursorConfig.setPointRange(startPoint, endPoint);
         return this;
     }
-
 
     /**
      * Disable a certain pattern within a query.
@@ -477,14 +477,13 @@ public final class Query implements AutoCloseable {
         return Collections.unmodifiableMap(assertions.get(index));
     }
 
-
     /**
-     * Execute the query on a given node.
+     * Execute the query on a given node with the default {@link QueryCursorConfig}.
      * @param node The node that the query will run on.
      * @return A cursor that can be used to iterate over the matches.
      */
-    public QueryCursor execute(Node node){
-        return new QueryCursor(this, node, cursorOptions);
+    public QueryCursor execute(Node node) {
+        return new QueryCursor(this, node, cursorConfig);
     }
 
     /**
@@ -493,21 +492,21 @@ public final class Query implements AutoCloseable {
      * @param options The options that will be used for this query.
      * @return A cursor that can be used to iterate over the matches.
      */
-    public QueryCursor execute(Node node, QueryCursorOptions options){
+    public QueryCursor execute(Node node, QueryCursorConfig options) {
         return new QueryCursor(this, node, options);
     }
-
 
     /**
      * Iterate over all the matches in the order that they were found. The lifetime of the native memory of the returned
      * matches is bound to the lifetime of this query object.
      *
      * @param node The node that the query will run on.
+     * @implNote The stream is not created lazily such that there is no open {@link QueryCursor} instance left behind.
+     *           For creating a lazy stream use {@link #execute(Node)} and {@link QueryCursor#matchStream()}.
      */
     public Stream<QueryMatch> findMatches(Node node) {
         return findMatches(node, arena, null);
     }
-
 
     /**
      * Iterate over all the matches in the order that they were found. The lifetime of the native memory of the returned
@@ -526,12 +525,12 @@ public final class Query implements AutoCloseable {
      *
      * @param node      The node that the query will run on.
      * @param predicate A function that handles custom predicates.
-     * @implNote The stream is not created lazily such that there is no open {@link QueryCursor} instance left behind. For creating a lazy stream use {@link #execute(Node)} and {@link QueryCursor#stream(BiPredicate)}.
+     * @implNote The stream is not created lazily such that there is no open {@link QueryCursor} instance left behind.
+     *           For creating a lazy stream use {@link #execute(Node)} and {@link QueryCursor#matchStream(BiPredicate)}.
      */
     public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
         return findMatches(node, arena, predicate);
     }
-
 
     /**
      * Like {@link #findMatches(Node, BiPredicate)} but the native memory of the returned matches is created using the
@@ -540,12 +539,15 @@ public final class Query implements AutoCloseable {
      * @param node The node that the query will run on.
      * @param allocator The allocator that is used to allocate the native memory of the returned matches.
      * @param predicate A function that handles custom predicates.
+     * @implNote The stream is not created lazily such that there is no open {@link QueryCursor} instance left behind.
+     *           For creating a lazy stream use {@link #execute(Node)} and {@link QueryCursor#matchStream(SegmentAllocator, BiPredicate)}.
      */
-    public Stream<QueryMatch> findMatches(Node node, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
-        try(QueryCursor cursor = this.execute(node)){
+    public Stream<QueryMatch> findMatches(
+            Node node, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
+        try (QueryCursor cursor = this.execute(node)) {
             // make sure to load the entire stream into memory before closing the cursor.
-            // Otherwise, we call for nextMatch after closing the cursor which leads to undefined behavior.
-            return cursor.stream(allocator, predicate).toList().stream();
+            // Otherwise, we call for nextMatch after closing the cursor which leads to an exception.
+            return cursor.matchStream(allocator, predicate).toList().stream();
         }
     }
 
@@ -559,13 +561,10 @@ public final class Query implements AutoCloseable {
         return "Query{language=%s, source=%s}".formatted(language, source);
     }
 
-
     private void checkIndex(@Unsigned int index) throws IndexOutOfBoundsException {
         if (Integer.compareUnsigned(index, getPatternCount()) >= 0) {
             throw new IndexOutOfBoundsException(
                     "Pattern index %s is out of bounds".formatted(Integer.toUnsignedString(index)));
         }
     }
-
-
 }
