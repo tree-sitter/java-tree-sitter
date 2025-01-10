@@ -3,9 +3,8 @@ package io.github.treesitter.jtreesitter;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
-import org.junit.jupiter.api.*;
-
 import java.lang.foreign.Arena;
+import org.junit.jupiter.api.*;
 
 class TreeCursorTest {
     private static Tree tree;

@@ -50,7 +50,6 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
         return this.node;
     }
 
-
     /**
      * Get the current node of the cursor. Its native memory will be managed by the given allocator.
      * @param allocator the allocator to use for managing the native memory of the node
