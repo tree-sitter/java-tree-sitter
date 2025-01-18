@@ -26,7 +26,7 @@ public class LanguageTest {
 
     @Test
     void getStateCount() {
-        assertEquals(1378, language.getStateCount());
+        assertEquals(1385, language.getStateCount());
     }
 
     @Test
