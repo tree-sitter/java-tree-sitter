@@ -172,6 +172,18 @@ class NodeTest {
     }
 
     @Test
+    void getFirstChildForByte() {
+        var child = node.getFirstChildForByte(15).orElseThrow();
+        assertEquals("line_comment", child.getGrammarType());
+    }
+
+    @Test
+    void getFirstNamedChildForByte() {
+        var child = node.getFirstNamedChildForByte(15).orElseThrow();
+        assertEquals("line_comment", child.getGrammarType());
+    }
+
+    @Test
     void getChildByFieldId() {
         var child = node.getChild(0).orElseThrow();
         child = child.getChildByFieldId((short) 20).orElseThrow();

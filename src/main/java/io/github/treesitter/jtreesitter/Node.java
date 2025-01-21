@@ -235,6 +235,24 @@ public final class Node {
     }
 
     /**
+     * Get the node's first child that contains or starts after the given byte offset.
+     *
+     * @since 0.25.0
+     */
+    public Optional<Node> getFirstChildForByte(@Unsigned int byte_offset) {
+        return optional(ts_node_first_child_for_byte(arena, self, byte_offset));
+    }
+
+    /**
+     * Get the node's first <em>named</em> child that contains or starts after the given byte offset.
+     *
+     * @since 0.25.0
+     */
+    public Optional<Node> getFirstNamedChildForByte(@Unsigned int byte_offset) {
+        return optional(ts_node_first_named_child_for_byte(arena, self, byte_offset));
+    }
+
+    /**
      * Get the node's first child with the given field ID, if any.
      *
      * @see Language#getFieldIdForName
