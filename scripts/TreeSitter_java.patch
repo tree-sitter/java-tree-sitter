@@ -20,3 +20,12 @@
 
      public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
      public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
+@@ -8599,4 +8606,8 @@ public class TreeSitter {
+            throw new AssertionError("should not reach here", ex$);
+         }
+     }
++
++	static {
++       ts_set_allocator(malloc$address(), calloc$address(), realloc$address(), free$address());
++    }
+ }
