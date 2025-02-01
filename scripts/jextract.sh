@@ -40,7 +40,6 @@ exec jextract \
     --include-function ts_node_child \
     --include-function ts_node_child_by_field_id \
     --include-function ts_node_child_by_field_name \
-    --include-function ts_node_child_containing_descendant \
     --include-function ts_node_child_with_descendant \
     --include-function ts_node_child_count \
     --include-function ts_node_descendant_count \

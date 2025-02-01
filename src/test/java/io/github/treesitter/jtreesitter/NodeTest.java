@@ -268,15 +268,6 @@ class NodeTest {
     }
 
     @Test
-    @SuppressWarnings("removal")
-    void getChildContainingDescendant() {
-        var descendant = node.getChild(0).orElseThrow();
-        descendant = descendant.getChild(0).orElseThrow();
-        var child = node.getChildContainingDescendant(descendant);
-        assertEquals("class_declaration", child.orElseThrow().getType());
-    }
-
-    @Test
     void getChildWithDescendant() {
         var descendant = node.getChild(0).orElseThrow();
         var child = node.getChildWithDescendant(descendant);

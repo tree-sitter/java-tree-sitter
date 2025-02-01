@@ -409,18 +409,6 @@ public final class Node {
     }
 
     /**
-     * Get the child of the node that contains the given descendant, if any.
-     *
-     * @apiNote This method will not return the descendant if it is a direct child of this node.
-     * @deprecated Use {@link #getChildWithDescendant} instead.
-     */
-    @Deprecated(forRemoval = true)
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    public Optional<Node> getChildContainingDescendant(Node descendant) {
-        return optional(ts_node_child_containing_descendant(arena, self, descendant.self));
-    }
-
-    /**
      * Get the node that contains the given descendant, if any.
      *
      * @since 0.24.0
