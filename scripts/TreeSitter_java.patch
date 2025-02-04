@@ -25,7 +25,7 @@
          }
      }
 +
-+	static {
++    static {
 +       ts_set_allocator(malloc$address(), calloc$address(), realloc$address(), free$address());
 +    }
  }
