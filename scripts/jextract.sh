@@ -17,6 +17,10 @@ exec jextract \
     --include-struct TSRange \
     --include-struct TSTreeCursor \
     --include-function free \
+    --include-function malloc \
+    --include-function calloc \
+    --include-function realloc \
+    --include-function ts_set_allocator \
     --include-function ts_language_copy \
     --include-function ts_language_delete \
     --include-function ts_language_field_count \

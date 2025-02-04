@@ -22,9 +22,6 @@ public final class Tree implements AutoCloseable, Cloneable {
     private final Language language;
     private @Nullable List<Range> includedRanges;
 
-    // FIXME: figure out why free() crashes on Windows
-    private static final boolean IS_UNIX = !System.getProperty("os.name").startsWith("Windows");
-
     Tree(MemorySegment self, Language language, @Nullable String source, @Nullable Charset charset) {
         arena = Arena.ofShared();
         this.self = self.reinterpret(arena, TreeSitter::ts_tree_delete);
@@ -95,7 +92,7 @@ public final class Tree implements AutoCloseable, Cloneable {
                     var range = TSRange.asSlice(ranges, i);
                     includedRanges.add(Range.from(range));
                 }
-                if (IS_UNIX) free(ranges);
+                free(ranges);
             }
         }
         return Collections.unmodifiableList(includedRanges);
@@ -122,7 +119,7 @@ public final class Tree implements AutoCloseable, Cloneable {
                 var range = TSRange.asSlice(ranges, i);
                 changedRanges.add(Range.from(range));
             }
-            if (IS_UNIX) free(ranges);
+            free(ranges);
             return changedRanges;
         }
     }
