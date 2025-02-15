@@ -255,7 +255,9 @@ public final class Language implements Cloneable {
      * Create a new query from a string containing one or more S-expression patterns.
      *
      * @throws QueryError If an error occurred while creating the query.
+     * @deprecated Use the {@link Query#Query(Language, String) Query} constructor instead.
      */
+    @Deprecated(since = "0.25.0")
     public Query query(String source) throws QueryError {
         return new Query(this, source);
     }
