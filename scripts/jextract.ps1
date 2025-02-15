@@ -2,16 +2,21 @@ $package = 'io.github.treesitter.jtreesitter.internal'
 $output = "$($args[1])/generated-sources/jextract"
 $lib = "$($args[0])/core/lib"
 
-& jextract.bat `
+& jextract.ps1 `
     --include-struct TSInput `
     --include-struct TSInputEdit `
     --include-struct TSLogger `
     --include-struct TSNode `
+    --include-struct TSParseOptions `
+    --include-struct TSParseState `
     --include-struct TSPoint `
     --include-struct TSQueryCapture `
+    --include-struct TSQueryCursorOptions `
+    --include-struct TSQueryCursorState `
     --include-struct TSQueryMatch `
     --include-struct TSQueryPredicateStep `
     --include-struct TSQueryPredicateStepType `
+    --include-struct TSLanguageMetadata `
     --include-struct TSRange `
     --include-struct TSTreeCursor `
     --include-function free `
@@ -19,18 +24,22 @@ $lib = "$($args[0])/core/lib"
     --include-function calloc `
     --include-function realloc `
     --include-function ts_set_allocator `
+    --include-function ts_language_abi_version `
     --include-function ts_language_copy `
     --include-function ts_language_delete `
     --include-function ts_language_field_count `
     --include-function ts_language_field_id_for_name `
     --include-function ts_language_field_name_for_id `
+    --include-function ts_language_metadata `
+    --include-function ts_language_name `
     --include-function ts_language_next_state `
     --include-function ts_language_state_count `
+    --include-function ts_language_subtypes `
+    --include-function ts_language_supertypes `
     --include-function ts_language_symbol_count `
     --include-function ts_language_symbol_for_name `
     --include-function ts_language_symbol_name `
     --include-function ts_language_symbol_type `
-    --include-function ts_language_version `
     --include-function ts_lookahead_iterator_current_symbol `
     --include-function ts_lookahead_iterator_current_symbol_name `
     --include-function ts_lookahead_iterator_delete `
@@ -90,6 +99,7 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_parser_parse `
     --include-function ts_parser_parse_string `
     --include-function ts_parser_parse_string_encoding `
+    --include-function ts_parser_parse_with_options `
     --include-function ts_parser_print_dot_graphs `
     --include-function ts_parser_reset `
     --include-function ts_parser_set_cancellation_flag `
@@ -104,6 +114,7 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_query_cursor_delete `
     --include-function ts_query_cursor_did_exceed_match_limit `
     --include-function ts_query_cursor_exec `
+    --include-function ts_query_cursor_exec_with_options `
     --include-function ts_query_cursor_match_limit `
     --include-function ts_query_cursor_new `
     --include-function ts_query_cursor_next_capture `
@@ -157,7 +168,9 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_tree_root_node_with_offset `
     --include-constant TREE_SITTER_LANGUAGE_VERSION `
     --include-constant TREE_SITTER_MIN_COMPATIBLE_LANGUAGE_VERSION `
-    --include-constant TSInputEncodingUTF16 `
+    --include-constant TSInputEncodingCustom `
+    --include-constant TSInputEncodingUTF16BE `
+    --include-constant TSInputEncodingUTF16LE `
     --include-constant TSInputEncodingUTF8 `
     --include-constant TSLogTypeLex `
     --include-constant TSLogTypeParse `
@@ -180,6 +193,7 @@ $lib = "$($args[0])/core/lib"
     --include-constant TSSymbolTypeAuxiliary `
     --include-constant TSSymbolTypeRegular `
     --include-constant TSSymbolTypeSupertype `
+    --include-typedef DecodeFunction `
     --header-class-name TreeSitter `
     --output $output `
     -t $package `

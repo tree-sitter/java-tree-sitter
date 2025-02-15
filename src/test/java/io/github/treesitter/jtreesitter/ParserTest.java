@@ -3,6 +3,7 @@ package io.github.treesitter.jtreesitter;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -39,25 +40,8 @@ class ParserTest {
     }
 
     @Test
-    void getTimeoutMicros() {
-        assertEquals(0L, parser.getTimeoutMicros());
-    }
-
-    @Test
-    void setTimeoutMicros() {
-        assertSame(parser, parser.setTimeoutMicros(10L));
-        assertEquals(10L, parser.getTimeoutMicros());
-    }
-
-    @Test
     void setLogger() {
         assertSame(parser, parser.setLogger(null));
-    }
-
-    @Test
-    void setCancellationFlag() {
-        var flag = new Parser.CancellationFlag();
-        assertSame(parser, parser.setCancellationFlag(flag));
     }
 
     @Test
@@ -90,7 +74,8 @@ class ParserTest {
     @DisplayName("parse(utf16)")
     void parseUtf16() {
         parser.setLanguage(language);
-        try (var tree = parser.parse("var java = \"💩\";", InputEncoding.UTF_16).orElseThrow()) {
+        var encoding = InputEncoding.valueOf(StandardCharsets.UTF_16);
+        try (var tree = parser.parse("var java = \"💩\";", encoding).orElseThrow()) {
             var rootNode = tree.getRootNode();
 
             assertEquals(32, rootNode.getEndByte());
@@ -132,6 +117,7 @@ class ParserTest {
 
     @Test
     @DisplayName("parse(timeout)")
+    @SuppressWarnings("deprecation")
     void parseTimeout() {
         var source = "}".repeat(1024);
         // NOTE: can't use _ because of palantir/palantir-java-format#934
@@ -143,6 +129,7 @@ class ParserTest {
 
     @Test
     @DisplayName("parse(cancellation)")
+    @SuppressWarnings("deprecation")
     void parseCancellation() {
         var source = "}".repeat(1024 * 1024);
         // NOTE: can't use _ because of palantir/palantir-java-format#934
@@ -168,9 +155,26 @@ class ParserTest {
     }
 
     @Test
+    @DisplayName("parse(options)")
+    void parseOptions() {
+        var source = "}".repeat(1024);
+        // NOTE: can't use _ because of palantir/palantir-java-format#934
+        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+        var options = new Parser.Options((state) -> state.getCurrentByteOffset() <= 1000);
+
+        parser.setLanguage(language);
+        assertTrue(parser.parse(callback, InputEncoding.UTF_8, options).isEmpty());
+    }
+
+    @Test
     void reset() {
-        parser.setLanguage(language).setTimeoutMicros(1L);
-        parser.parse("{".repeat(1024));
+        var source = "class foo bar() {}";
+        // NOTE: can't use _ because of palantir/palantir-java-format#934
+        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+        var options = new Parser.Options(Parser.State::hasError);
+
+        parser.setLanguage(language);
+        parser.parse(callback, InputEncoding.UTF_8, options);
         parser.reset();
         try (var tree = parser.parse("String foo;").orElseThrow()) {
             assertFalse(tree.getRootNode().hasError());

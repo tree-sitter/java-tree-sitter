@@ -9,6 +9,7 @@ import java.lang.foreign.SymbolLookup;
  * by listing their fully qualified class name in a resource file named
  * {@code META-INF/services/io.github.treesitter.jtreesitter.NativeLibraryLookup}.
  *
+ * @since 0.25.0
  * @see java.util.ServiceLoader
  */
 @FunctionalInterface
@@ -17,6 +18,7 @@ public interface NativeLibraryLookup {
      * Get the {@link SymbolLookup} to be used for the tree-sitter native library.
      *
      * @param arena The arena that will manage the native memory.
+     * @since 0.25.0
      */
     SymbolLookup get(Arena arena);
 }

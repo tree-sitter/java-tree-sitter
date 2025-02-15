@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -53,7 +54,10 @@ public final class Parser implements AutoCloseable {
     /**
      * Get the maximum duration in microseconds that
      * parsing should be allowed to take before halting.
+     *
+     * @deprecated Use {@link Options} instead.
      */
+    @Deprecated(since = "0.25.0")
     public @Unsigned long getTimeoutMicros() {
         return ts_parser_timeout_micros(self);
     }
@@ -61,7 +65,11 @@ public final class Parser implements AutoCloseable {
     /**
      * Set the maximum duration in microseconds that
      * parsing should be allowed to take before halting.
+     *
+     * @deprecated Use {@link Options} instead.
      */
+    @Deprecated(since = "0.25.0")
+    @SuppressWarnings("DeprecatedIsStillUsed")
     public Parser setTimeoutMicros(@Unsigned long timeoutMicros) {
         ts_parser_set_timeout_micros(self, timeoutMicros);
         return this;
@@ -105,7 +113,11 @@ public final class Parser implements AutoCloseable {
      *
      * <p>The parser will periodically read from this flag during parsing.
      * If it reads a non-zero value, it will halt early.
+     *
+     * @deprecated Use {@link Options} instead.
      */
+    @Deprecated(since = "0.25.0")
+    @SuppressWarnings("DeprecatedIsStillUsed")
     public synchronized Parser setCancellationFlag(CancellationFlag cancellationFlag) {
         ts_parser_set_cancellation_flag(self, cancellationFlag.segment);
         return this;
@@ -254,8 +266,19 @@ public final class Parser implements AutoCloseable {
      * @return An optional {@linkplain Tree} which is empty if parsing was halted.
      * @throws IllegalStateException If the parser does not have a language assigned.
      */
-    public Optional<Tree> parse(ParseCallback callback, InputEncoding encoding) throws IllegalStateException {
-        return parse(callback, encoding, null);
+    public Optional<Tree> parse(ParseCallback parseCallback, InputEncoding encoding) throws IllegalStateException {
+        return parse(parseCallback, encoding, null, null);
+    }
+
+    /**
+     * Parse source code from a callback and create a syntax tree.
+     *
+     * @return An optional {@linkplain Tree} which is empty if parsing was halted.
+     * @throws IllegalStateException If the parser does not have a language assigned.
+     */
+    public Optional<Tree> parse(ParseCallback parseCallback, InputEncoding encoding, Options options)
+            throws IllegalStateException {
+        return parse(parseCallback, encoding, null, options);
     }
 
     /**
@@ -271,20 +294,20 @@ public final class Parser implements AutoCloseable {
      * @throws IllegalStateException If the parser does not have a language assigned.
      */
     @SuppressWarnings("unused")
-    public Optional<Tree> parse(ParseCallback callback, InputEncoding encoding, @Nullable Tree oldTree)
+    public Optional<Tree> parse(
+            ParseCallback parseCallback, InputEncoding encoding, @Nullable Tree oldTree, @Nullable Options options)
             throws IllegalStateException {
         if (language == null) {
             throw new IllegalStateException("The parser has no language assigned");
         }
 
-        // FIXME: callbacks cannot be cancelled
         var input = TSInput.allocate(arena);
         TSInput.payload(input, MemorySegment.NULL);
         TSInput.encoding(input, encoding.ordinal());
         // NOTE: can't use _ because of palantir/palantir-java-format#934
         var read = TSInput.read.allocate(
                 (payload, index, point, bytes) -> {
-                    var result = callback.apply(index, Point.from(point));
+                    var result = parseCallback.apply(index, Point.from(point));
                     if (result == null) {
                         bytes.set(C_INT, 0, 0);
                         return MemorySegment.NULL;
@@ -296,8 +319,22 @@ public final class Parser implements AutoCloseable {
                 arena);
         TSInput.read(input, read);
 
-        var old = oldTree == null ? MemorySegment.NULL : oldTree.segment();
-        var tree = ts_parser_parse(self, old, input);
+        MemorySegment tree, old = oldTree == null ? MemorySegment.NULL : oldTree.segment();
+        if (options == null) {
+            tree = ts_parser_parse(self, old, input);
+        } else {
+            var parseOptions = TSParseOptions.allocate(arena);
+            TSParseOptions.payload(parseOptions, MemorySegment.NULL);
+            var progress = TSParseOptions.progress_callback.allocate(
+                    (payload) -> {
+                        var offset = TSParseState.current_byte_offset(payload);
+                        var hasError = TSParseState.has_error(payload);
+                        return options.progressCallback(new State(offset, hasError));
+                    },
+                    arena);
+            TSParseOptions.progress_callback(parseOptions, progress);
+            tree = ts_parser_parse_with_options(self, old, input, parseOptions);
+        }
         if (tree.equals(MemorySegment.NULL)) return Optional.empty();
         return Optional.of(new Tree(tree, language, null, null));
     }
@@ -305,9 +342,8 @@ public final class Parser implements AutoCloseable {
     /**
      * Instruct the parser to start the next {@linkplain #parse parse} from the beginning.
      *
-     * @apiNote If the parser previously stopped because of a {@linkplain #setTimeoutMicros timeout}
-     * or {@linkplain #setCancellationFlag cancellation}, it will resume where it left off.
-     * <br>If you intend to parse another document instead, you must call this method first.
+     * @apiNote If parsing was previously halted, the parser will resume where it left off.
+     * If you intend to parse another document instead, you must call this method first.
      */
     public void reset() {
         ts_parser_reset(self);
@@ -323,7 +359,63 @@ public final class Parser implements AutoCloseable {
         return "Parser{language=%s}".formatted(language);
     }
 
-    /** A class representing a cancellation flag. */
+    /**
+     * A class representing the current state of the parser.
+     *
+     * @since 0.25.0
+     */
+    public static final class State {
+        private final @Unsigned int currentByteOffset;
+        private final boolean hasError;
+
+        private State(@Unsigned int currentByteOffset, boolean hasError) {
+            this.currentByteOffset = currentByteOffset;
+            this.hasError = hasError;
+        }
+
+        /** Get the current byte offset of the parser. */
+        public @Unsigned int getCurrentByteOffset() {
+            return currentByteOffset;
+        }
+
+        /** Check if the parser has encountered an error. */
+        public boolean hasError() {
+            return hasError;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "Parser.State{currentByteOffset=%s, hasError=%s}",
+                    Integer.toUnsignedString(currentByteOffset), hasError);
+        }
+    }
+
+    /**
+     * A class representing the parser options.
+     *
+     * @since 0.25.0
+     */
+    @NullMarked
+    public static final class Options {
+        private final Predicate<State> progressCallback;
+
+        public Options(Predicate<State> progressCallback) {
+            this.progressCallback = progressCallback;
+        }
+
+        private boolean progressCallback(State state) {
+            return progressCallback.test(state);
+        }
+    }
+
+    /**
+     * A class representing a cancellation flag.
+     *
+     * @deprecated Use {@link Options} instead.
+     */
+    @Deprecated(since = "0.25.0")
+    @SuppressWarnings("DeprecatedIsStillUsed")
     public static class CancellationFlag {
         private final Arena arena = Arena.ofAuto();
         private final MemorySegment segment = arena.allocate(C_LONG_LONG);

@@ -12,8 +12,7 @@ public interface ParseCallback extends BiFunction<Integer, Point, String> {
      *
      * @param offset the current byte offset
      * @param point the current point
-     * @return A chunk of text or {@code null}
-     *         to indicate the end of the document.
+     * @return A chunk of text or {@code null} to indicate the end of the document.
      */
     @Override
     @Nullable
