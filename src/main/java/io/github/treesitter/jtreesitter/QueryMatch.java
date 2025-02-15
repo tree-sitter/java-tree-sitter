@@ -1,5 +1,9 @@
 package io.github.treesitter.jtreesitter;
 
+import io.github.treesitter.jtreesitter.internal.*;
+import java.lang.foreign.MemorySegment;
+import java.lang.foreign.SegmentAllocator;
+import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.NullMarked;
 
@@ -10,6 +14,20 @@ public record QueryMatch(@Unsigned int patternIndex, List<QueryCapture> captures
     public QueryMatch(@Unsigned int patternIndex, List<QueryCapture> captures) {
         this.patternIndex = patternIndex;
         this.captures = List.copyOf(captures);
+    }
+
+    static QueryMatch from(MemorySegment match, List<String> captureNames, Tree tree, SegmentAllocator allocator) {
+        var count = Short.toUnsignedInt(TSQueryMatch.capture_count(match));
+        var matchCaptures = TSQueryMatch.captures(match);
+        var captureList = new ArrayList<QueryCapture>(count);
+        for (int i = 0; i < count; ++i) {
+            var capture = TSQueryCapture.asSlice(matchCaptures, i);
+            var name = captureNames.get(TSQueryCapture.index(capture));
+            var node = TSNode.allocate(allocator).copyFrom(TSQueryCapture.node(capture));
+            captureList.add(new QueryCapture(name, new Node(node, tree)));
+        }
+        var patternIndex = TSQueryMatch.pattern_index(match);
+        return new QueryMatch(patternIndex, captureList);
     }
 
     /** Find the nodes that are captured by the given capture name. */

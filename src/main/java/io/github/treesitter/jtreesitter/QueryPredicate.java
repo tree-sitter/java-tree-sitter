@@ -8,7 +8,7 @@ import org.jspecify.annotations.NullMarked;
 /**
  * A query predicate that associates conditions (or arbitrary metadata) with a pattern.
  *
- * @see <a href="https://tree-sitter.github.io/tree-sitter/using-parsers#predicates">Predicates</a>
+ * @see <a href="https://tree-sitter.github.io/tree-sitter/using-parsers/queries/3-predicates-and-directives.html">Predicates</a>
  */
 @NullMarked
 public sealed class QueryPredicate permits QueryPredicate.AnyOf, QueryPredicate.Eq, QueryPredicate.Match {

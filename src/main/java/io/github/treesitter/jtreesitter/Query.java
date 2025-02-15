@@ -5,15 +5,12 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 import io.github.treesitter.jtreesitter.internal.*;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import java.lang.foreign.SegmentAllocator;
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -21,74 +18,39 @@ import org.jspecify.annotations.Nullable;
  * A class that represents a set of patterns which match
  * {@linkplain Node nodes} in a {@linkplain Tree syntax tree}.
  *
- * @see <a href="https://tree-sitter.github.io/tree-sitter/using-parsers#query-syntax">Query Syntax</a>
+ * @see <a href="https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html">Query Syntax</a>
  */
 @NullMarked
 public final class Query implements AutoCloseable {
-    private final MemorySegment query;
-    private final MemorySegment cursor;
+    private final MemorySegment self;
     private final Arena arena;
     private final Language language;
     private final String source;
     private final List<String> captureNames;
+    private final List<String> stringValues;
     private final List<List<QueryPredicate>> predicates;
     private final List<Map<String, Optional<String>>> settings;
     private final List<Map<String, Optional<String>>> positiveAssertions;
     private final List<Map<String, Optional<String>>> negativeAssertions;
 
-    Query(Language language, String source) throws QueryError {
+    /**
+     * Create a new query from a string containing one or more S-expression patterns.
+     *
+     * @throws QueryError If an error occurred while creating the query.
+     */
+    public Query(Language language, String source) throws QueryError {
         arena = Arena.ofShared();
         var string = arena.allocateFrom(source);
         var errorOffset = arena.allocate(C_INT);
         var errorType = arena.allocate(C_INT);
         var query = ts_query_new(language.segment(), string, source.length(), errorOffset, errorType);
-        if (query.equals(MemorySegment.NULL)) {
-            long start = 0, row = 0;
-            int offset = errorOffset.get(C_INT, 0);
-            for (var line : source.split("\n")) {
-                long end = start + line.length() + 1;
-                if (end > offset) break;
-                start = end;
-                row += 1;
-            }
-            long column = offset - start, type = errorType.get(C_INT, 0);
-            if (type == TSQueryErrorSyntax()) {
-                if (offset >= source.length()) throw new QueryError.Syntax();
-                throw new QueryError.Syntax(row, column);
-            } else if (type == TSQueryErrorCapture()) {
-                int index = 0, length = source.length();
-                var suffix = source.subSequence(offset, length);
-                for (; index < length; ++index) {
-                    if (invalidPredicateChar(suffix.charAt(index))) break;
-                }
-                throw new QueryError.Capture(row, column, suffix.subSequence(0, index));
-            } else if (type == TSQueryErrorNodeType()) {
-                int index = 0, length = source.length();
-                var suffix = source.subSequence(offset, length);
-                for (; index < length; ++index) {
-                    if (invalidIdentifierChar(suffix.charAt(index))) break;
-                }
-                throw new QueryError.NodeType(row, column, suffix.subSequence(0, index));
-            } else if (type == TSQueryErrorField()) {
-                int index = 0, length = source.length();
-                var suffix = source.subSequence(offset, length);
-                for (; index < length; ++index) {
-                    if (invalidIdentifierChar(suffix.charAt(index))) break;
-                }
-                throw new QueryError.Field(row, column, suffix.subSequence(0, index));
-            } else if (type == TSQueryErrorStructure()) {
-                throw new QueryError.Structure(row, column);
-            } else {
-                throw new IllegalStateException("Unexpected query error");
-            }
-        }
+        if (query.equals(MemorySegment.NULL)) handleError(source, errorOffset, errorType);
 
         this.language = language;
         this.source = source;
-        this.query = query.reinterpret(arena, TreeSitter::ts_query_delete);
-        cursor = ts_query_cursor_new().reinterpret(arena, TreeSitter::ts_query_cursor_delete);
+        this.self = query.reinterpret(arena, TreeSitter::ts_query_delete);
 
-        var captureCount = ts_query_capture_count(this.query);
+        var captureCount = ts_query_capture_count(this.self);
         captureNames = new ArrayList<>(captureCount);
         try (var alloc = Arena.ofConfined()) {
             for (int i = 0; i < captureCount; ++i) {
@@ -101,14 +63,14 @@ public final class Query implements AutoCloseable {
             }
         }
 
-        var patternCount = ts_query_pattern_count(this.query);
+        var patternCount = ts_query_pattern_count(this.self);
         predicates = generate(ArrayList::new, patternCount);
         settings = generate(HashMap::new, patternCount);
         positiveAssertions = generate(HashMap::new, patternCount);
         negativeAssertions = generate(HashMap::new, patternCount);
 
-        var stringCount = ts_query_string_count(this.query);
-        List<String> stringValues = new ArrayList<>(stringCount);
+        var stringCount = ts_query_string_count(this.self);
+        stringValues = new ArrayList<>(stringCount);
         try (var alloc = Arena.ofConfined()) {
             for (int i = 0; i < stringCount; ++i) {
                 var length = alloc.allocate(C_INT);
@@ -120,6 +82,66 @@ public final class Query implements AutoCloseable {
             }
         }
 
+        handlePredicates(source, query, patternCount);
+    }
+
+    private static void handleError(String source, MemorySegment errorOffset, MemorySegment errorType)
+            throws QueryError {
+        long start = 0, row = 0;
+        int offset = errorOffset.get(C_INT, 0);
+        for (var line : source.split("\n")) {
+            long end = start + line.length() + 1;
+            if (end > offset) break;
+            start = end;
+            row += 1;
+        }
+        long column = offset - start, type = errorType.get(C_INT, 0);
+        if (type == TSQueryErrorSyntax()) {
+            if (offset >= source.length()) throw new QueryError.Syntax();
+            throw new QueryError.Syntax(row, column);
+        } else if (type == TSQueryErrorCapture()) {
+            int index = 0, length = source.length();
+            var suffix = source.subSequence(offset, length);
+            for (; index < length; ++index) {
+                if (invalidPredicateChar(suffix.charAt(index))) break;
+            }
+            throw new QueryError.Capture(row, column, suffix.subSequence(0, index));
+        } else if (type == TSQueryErrorNodeType()) {
+            int index = 0, length = source.length();
+            var suffix = source.subSequence(offset, length);
+            for (; index < length; ++index) {
+                if (invalidIdentifierChar(suffix.charAt(index))) break;
+            }
+            throw new QueryError.NodeType(row, column, suffix.subSequence(0, index));
+        } else if (type == TSQueryErrorField()) {
+            int index = 0, length = source.length();
+            var suffix = source.subSequence(offset, length);
+            for (; index < length; ++index) {
+                if (invalidIdentifierChar(suffix.charAt(index))) break;
+            }
+            throw new QueryError.Field(row, column, suffix.subSequence(0, index));
+        } else if (type == TSQueryErrorStructure()) {
+            throw new QueryError.Structure(row, column);
+        } else {
+            throw new IllegalStateException("Unexpected query error");
+        }
+    }
+
+    private static <T> List<T> generate(Supplier<T> supplier, int limit) {
+        return Stream.generate(supplier).limit(limit).toList();
+    }
+
+    private static boolean invalidIdentifierChar(char c) {
+        return !Character.isLetterOrDigit(c) && c != '_';
+    }
+
+    private static boolean invalidPredicateChar(char c) {
+        return !(Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == '.' || c == '?' || c == '!');
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    private void handlePredicates(String source, MemorySegment query, @Unsigned int patternCount)
+            throws QueryError.Predicate {
         try (var alloc = Arena.ofConfined()) {
             for (int i = 0, steps; i < patternCount; ++i) {
                 var count = alloc.allocate(C_INT);
@@ -251,104 +273,41 @@ public final class Query implements AutoCloseable {
         }
     }
 
-    private static <T> List<T> generate(Supplier<T> supplier, int limit) {
-        return Stream.generate(supplier).limit(limit).toList();
-    }
-
-    private static boolean invalidIdentifierChar(char c) {
-        return !Character.isLetterOrDigit(c) && c != '_';
-    }
-
-    private static boolean invalidPredicateChar(char c) {
-        return !(Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == '.' || c == '?' || c == '!');
+    MemorySegment segment() {
+        return self;
     }
 
     /** Get the number of patterns in the query. */
     public @Unsigned int getPatternCount() {
-        return ts_query_pattern_count(query);
+        return ts_query_pattern_count(self);
     }
 
-    /** Get the number of captures in the query. */
+    /**
+     * Get the number of captures in the query.
+     *
+     * @deprecated Use {@code getCaptureNames().size()} instead.
+     */
+    @Deprecated(since = "0.25.0")
     public @Unsigned int getCaptureCount() {
-        return ts_query_capture_count(query);
+        return ts_query_capture_count(self);
     }
 
     /**
-     * Get the maximum number of in-progress matches.
+     * Get the names of the captures used in the query.
      *
-     * @apiNote Defaults to {@code -1} (unlimited).
+     * @since 0.25.0
      */
-    public @Unsigned int getMatchLimit() {
-        return ts_query_cursor_match_limit(cursor);
+    public List<String> getCaptureNames() {
+        return Collections.unmodifiableList(captureNames);
     }
 
     /**
-     * Get the maximum number of in-progress matches.
+     * Get the string literals used in the query.
      *
-     * @throws IllegalArgumentException If {@code matchLimit == 0}.
+     * @since 0.25.0
      */
-    public Query setMatchLimit(@Unsigned int matchLimit) throws IllegalArgumentException {
-        if (matchLimit == 0) {
-            throw new IllegalArgumentException("The match limit cannot equal 0");
-        }
-        ts_query_cursor_set_match_limit(cursor, matchLimit);
-        return this;
-    }
-
-    /**
-     * Get the maximum duration in microseconds that query
-     * execution should be allowed to take before halting.
-     *
-     * @apiNote Defaults to {@code 0} (unlimited).
-     * @since 0.23.1
-     */
-    public @Unsigned long getTimeoutMicros() {
-        return ts_query_cursor_timeout_micros(cursor);
-    }
-
-    /**
-     * Set the maximum duration in microseconds that query
-     * execution should be allowed to take before halting.
-     *
-     * @since 0.23.1
-     */
-    public Query setTimeoutMicros(@Unsigned long timeoutMicros) {
-        ts_query_cursor_set_timeout_micros(cursor, timeoutMicros);
-        return this;
-    }
-
-    /**
-     * Set the maximum start depth for the query.
-     *
-     * <p>This prevents cursors from exploring children nodes at a certain depth.
-     * <br>Note that if a pattern includes many children, then they will still be checked.
-     */
-    public Query setMaxStartDepth(@Unsigned int maxStartDepth) {
-        ts_query_cursor_set_max_start_depth(cursor, maxStartDepth);
-        return this;
-    }
-
-    /** Set the range of bytes in which the query will be executed. */
-    public Query setByteRange(@Unsigned int startByte, @Unsigned int endByte) {
-        ts_query_cursor_set_byte_range(cursor, startByte, endByte);
-        return this;
-    }
-
-    /** Set the range of points in which the query will be executed. */
-    public Query setPointRange(Point startPoint, Point endPoint) {
-        try (var alloc = Arena.ofConfined()) {
-            MemorySegment start = startPoint.into(alloc), end = endPoint.into(alloc);
-            ts_query_cursor_set_point_range(cursor, start, end);
-        }
-        return this;
-    }
-
-    /**
-     * Check if the query exceeded its maximum number of
-     * in-progress matches during its last execution.
-     */
-    public boolean didExceedMatchLimit() {
-        return ts_query_cursor_did_exceed_match_limit(cursor);
+    public List<String> getStringValues() {
+        return Collections.unmodifiableList(stringValues);
     }
 
     /**
@@ -361,7 +320,7 @@ public final class Query implements AutoCloseable {
      */
     public void disablePattern(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
-        ts_query_disable_pattern(query, index);
+        ts_query_disable_pattern(self, index);
     }
 
     /**
@@ -377,7 +336,7 @@ public final class Query implements AutoCloseable {
             throw new NoSuchElementException("Capture @%s does not exist".formatted(name));
         }
         try (var alloc = Arena.ofConfined()) {
-            ts_query_disable_capture(query, alloc.allocateFrom(name), name.length());
+            ts_query_disable_capture(self, alloc.allocateFrom(name), name.length());
         }
     }
 
@@ -389,7 +348,7 @@ public final class Query implements AutoCloseable {
      */
     public @Unsigned int startByteForPattern(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
-        return ts_query_start_byte_for_pattern(query, index);
+        return ts_query_start_byte_for_pattern(self, index);
     }
 
     /**
@@ -401,7 +360,7 @@ public final class Query implements AutoCloseable {
      */
     public @Unsigned int endByteForPattern(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
-        return ts_query_end_byte_for_pattern(query, index);
+        return ts_query_end_byte_for_pattern(self, index);
     }
 
     /**
@@ -412,7 +371,7 @@ public final class Query implements AutoCloseable {
      */
     public boolean isPatternRooted(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
-        return ts_query_is_pattern_rooted(query, index);
+        return ts_query_is_pattern_rooted(self, index);
     }
 
     /**
@@ -428,7 +387,7 @@ public final class Query implements AutoCloseable {
      */
     public boolean isPatternNonLocal(@Unsigned int index) throws IndexOutOfBoundsException {
         checkIndex(index);
-        return ts_query_is_pattern_non_local(query, index);
+        return ts_query_is_pattern_non_local(self, index);
     }
 
     /**
@@ -441,13 +400,13 @@ public final class Query implements AutoCloseable {
             throw new IndexOutOfBoundsException(
                     "Byte offset %s exceeds EOF".formatted(Integer.toUnsignedString(offset)));
         }
-        return ts_query_is_pattern_guaranteed_at_step(query, offset);
+        return ts_query_is_pattern_guaranteed_at_step(self, offset);
     }
 
     /**
      * Get the property settings for the given pattern index.
      *
-     * <p>Properties are set using the {@code #set!} predicate.
+     * <p>Properties are set using the {@code #set!} directive.
      *
      * @param index The index of a pattern within the query.
      * @return A map of property keys with optional values.
@@ -478,53 +437,6 @@ public final class Query implements AutoCloseable {
         return Collections.unmodifiableMap(assertions.get(index));
     }
 
-    /**
-     * Iterate over all the matches in the order that they were found.
-     *
-     * @implNote The lifetime of the matches is bound to that of the query.
-     *
-     * @param node The node that the query will run on.
-     */
-    public Stream<QueryMatch> findMatches(Node node) {
-        return findMatches(node, arena, null);
-    }
-
-    /**
-     * Iterate over all the matches in the order that they were found.
-     *
-     * <h4 id="findMatches-example">Predicate Example</h4>
-     * <p>
-     * {@snippet lang="java" :
-     * Stream<QueryMatch> matches = query.findMatches(tree.getRootNode(), (predicate, match) -> {
-     *      if (!predicate.getName().equals("ieq?")) return true;
-     *      List<QueryPredicateArg> args = predicate.getArgs();
-     *      Node node = match.findNodes(args.getFirst().value()).getFirst();
-     *      return args.getLast().value().equalsIgnoreCase(node.getText());
-     *  });
-     * }
-     *
-     * @implNote The lifetime of the matches is bound to that of the query.
-     *
-     * @param node The node that the query will run on.
-     * @param predicate A function that handles custom predicates.
-     */
-    public Stream<QueryMatch> findMatches(Node node, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
-        return findMatches(node, arena, predicate);
-    }
-
-    /**
-     * Iterate over all the matches in the order that they were found, using the given allocator.
-     *
-     * @see #findMatches(Node, BiPredicate)
-     */
-    public Stream<QueryMatch> findMatches(
-            Node node, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
-        try (var alloc = Arena.ofConfined()) {
-            ts_query_cursor_exec(cursor, query, node.copy(alloc));
-        }
-        return StreamSupport.stream(new MatchesIterator(node.getTree(), allocator, predicate), false);
-    }
-
     @Override
     public void close() throws RuntimeException {
         arena.close();
@@ -535,7 +447,7 @@ public final class Query implements AutoCloseable {
         return "Query{language=%s, source=%s}".formatted(language, source);
     }
 
-    private boolean matches(@Nullable BiPredicate<QueryPredicate, QueryMatch> predicate, QueryMatch match) {
+    boolean matches(@Nullable BiPredicate<QueryPredicate, QueryMatch> predicate, QueryMatch match) {
         return predicates.get(match.patternIndex()).stream().allMatch(p -> {
             if (p.getClass() != QueryPredicate.class) return p.test(match);
             return predicate == null || predicate.test(p, match);
@@ -546,44 +458,6 @@ public final class Query implements AutoCloseable {
         if (Integer.compareUnsigned(index, getPatternCount()) >= 0) {
             throw new IndexOutOfBoundsException(
                     "Pattern index %s is out of bounds".formatted(Integer.toUnsignedString(index)));
-        }
-    }
-
-    private final class MatchesIterator extends Spliterators.AbstractSpliterator<QueryMatch> {
-        private final @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate;
-        private final Tree tree;
-        private final SegmentAllocator allocator;
-
-        public MatchesIterator(
-                Tree tree, SegmentAllocator allocator, @Nullable BiPredicate<QueryPredicate, QueryMatch> predicate) {
-            super(Long.MAX_VALUE, Spliterator.IMMUTABLE | Spliterator.NONNULL);
-            this.predicate = predicate;
-            this.tree = tree;
-            this.allocator = allocator;
-        }
-
-        @Override
-        public boolean tryAdvance(Consumer<? super QueryMatch> action) {
-            var hasNoText = tree.getText() == null;
-            MemorySegment match = arena.allocate(TSQueryMatch.layout());
-            while (ts_query_cursor_next_match(cursor, match)) {
-                var count = Short.toUnsignedInt(TSQueryMatch.capture_count(match));
-                var matchCaptures = TSQueryMatch.captures(match);
-                var captureList = new ArrayList<QueryCapture>(count);
-                for (int i = 0; i < count; ++i) {
-                    var capture = TSQueryCapture.asSlice(matchCaptures, i);
-                    var name = captureNames.get(TSQueryCapture.index(capture));
-                    var node = TSNode.allocate(allocator).copyFrom(TSQueryCapture.node(capture));
-                    captureList.add(new QueryCapture(name, new Node(node, tree)));
-                }
-                var patternIndex = TSQueryMatch.pattern_index(match);
-                var result = new QueryMatch(patternIndex, captureList);
-                if (hasNoText || matches(predicate, result)) {
-                    action.accept(result);
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }

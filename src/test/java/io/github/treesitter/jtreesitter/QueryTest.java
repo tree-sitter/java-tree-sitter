@@ -3,6 +3,7 @@ package io.github.treesitter.jtreesitter;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.treesitter.jtreesitter.languages.TreeSitterJava;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
@@ -84,57 +85,18 @@ class QueryTest {
     }
 
     @Test
-    void getCaptureCount() {
-        assertQuery(query -> assertEquals(3, query.getCaptureCount()));
+    void getCaptureNames() {
+        assertQuery(query -> assertIterableEquals(List.of("identifier", "class", "body"), query.getCaptureNames()));
     }
 
     @Test
-    void getMatchLimit() {
-        assertQuery(query -> assertEquals(-1, query.getMatchLimit()));
-    }
-
-    @Test
-    void setMatchLimit() {
-        assertQuery(query -> {
-            assertSame(query, query.setMatchLimit(10));
-            assertEquals(10, query.getMatchLimit());
-        });
-    }
-
-    @Test
-    void getTimeoutMicros() {
-        assertQuery(query -> assertEquals(0, query.getTimeoutMicros()));
-    }
-
-    @Test
-    void setTimeoutMicros() {
-        assertQuery(query -> {
-            assertSame(query, query.setTimeoutMicros(10));
-            assertEquals(10, query.getTimeoutMicros());
-        });
-    }
-
-    @Test
-    void setMaxStartDepth() {
-        assertQuery(query -> assertSame(query, query.setMaxStartDepth(10)));
-    }
-
-    @Test
-    void setByteRange() {
-        assertQuery(query -> assertSame(query, query.setByteRange(1, 10)));
-    }
-
-    @Test
-    void setPointRange() {
-        assertQuery(query -> {
-            Point start = new Point(0, 1), end = new Point(1, 10);
-            assertSame(query, query.setPointRange(start, end));
-        });
-    }
-
-    @Test
-    void didExceedMatchLimit() {
-        assertQuery(query -> assertFalse(query.didExceedMatchLimit()));
+    void getStringValues() {
+        var source = """
+                ((identifier) @foo
+                 (#eq? @foo "Foo"))
+                """
+                .stripIndent();
+        assertQuery(source, query -> assertIterableEquals(List.of("eq?", "Foo"), query.getStringValues()));
     }
 
     @Test
@@ -215,90 +177,5 @@ class QueryTest {
             var assertions = query.getPatternAssertions(0, false);
             assertEquals("FOO", assertions.get("foo").orElse(null));
         });
-    }
-
-    @Test
-    void findMatches() {
-        try (var tree = parser.parse("class Foo {}").orElseThrow()) {
-            assertQuery(query -> {
-                var matches = query.findMatches(tree.getRootNode()).toList();
-                assertEquals(2, matches.size());
-                assertEquals(0, matches.getFirst().patternIndex());
-                assertEquals(1, matches.getLast().patternIndex());
-            });
-        }
-
-        try (var tree = parser.parse("int y = x + 1;").orElseThrow()) {
-            var source =
-                    """
-                ((variable_declarator
-                  (identifier) @y
-                  (binary_expression
-                    (identifier) @x))
-                  (#not-eq? @y @x))
-                """
-                            .stripIndent();
-            assertQuery(source, query -> {
-                var matches = query.findMatches(tree.getRootNode()).toList();
-                assertEquals(1, matches.size());
-                assertEquals(
-                        "y", matches.getFirst().captures().getFirst().node().getText());
-            });
-        }
-
-        try (var tree = parser.parse("class Foo{}\nclass Bar {}").orElseThrow()) {
-            var source = """
-                ((identifier) @foo
-                 (#eq? @foo "Foo"))
-                """
-                    .stripIndent();
-            assertQuery(source, query -> {
-                var matches = query.findMatches(tree.getRootNode()).toList();
-                assertEquals(1, matches.size());
-                assertEquals(
-                        "Foo", matches.getFirst().captures().getFirst().node().getText());
-            });
-
-            source =
-                    """
-                ((identifier) @name
-                 (#not-any-of? @name "Foo" "Bar"))
-                """
-                            .stripIndent();
-            assertQuery(source, query -> {
-                var matches = query.findMatches(tree.getRootNode()).toList();
-                assertTrue(matches.isEmpty());
-            });
-
-            source = """
-                ((identifier) @foo
-                 (#ieq? @foo "foo"))
-                """
-                    .stripIndent();
-            assertQuery(source, query -> {
-                var matches = query.findMatches(tree.getRootNode(), (predicate, match) -> {
-                            if (!predicate.getName().equals("ieq?")) return true;
-                            var args = predicate.getArgs();
-                            var node = match.findNodes(args.getFirst().value()).getFirst();
-                            return args.getLast().value().equalsIgnoreCase(node.getText());
-                        })
-                        .toList();
-                assertEquals(1, matches.size());
-                assertEquals(
-                        "Foo", matches.getFirst().captures().getFirst().node().getText());
-            });
-        }
-
-        // Verify that capture count is treated as `uint16_t` and not as signed Java `short`
-        try (var tree = parser.parse(";".repeat(Short.MAX_VALUE + 1)).orElseThrow()) {
-            var source = """
-                ";"+ @capture
-                """;
-            assertQuery(source, query -> {
-                var matches = query.findMatches(tree.getRootNode()).toList();
-                assertEquals(1, matches.size());
-                assertEquals(Short.MAX_VALUE + 1, matches.getFirst().captures().size());
-            });
-        }
     }
 }

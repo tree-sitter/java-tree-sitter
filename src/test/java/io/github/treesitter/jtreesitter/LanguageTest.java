@@ -105,11 +105,6 @@ public class LanguageTest {
     }
 
     @Test
-    void query() {
-        assertDoesNotThrow(() -> language.query("(identifier) @ident").close());
-    }
-
-    @Test
     void testEquals() {
         var other = new Language(TreeSitterJava.language());
         assertEquals(other, language.clone());
