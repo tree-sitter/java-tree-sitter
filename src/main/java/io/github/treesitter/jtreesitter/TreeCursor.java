@@ -9,7 +9,12 @@ import java.util.OptionalInt;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-/** A class that can be used to efficiently walk a {@linkplain Tree syntax tree}. */
+/**
+ * A class that can be used to efficiently walk a {@linkplain Tree syntax tree}.
+ *
+ * @apiNote The node the cursor was constructed with is considered the
+ * root of the cursor, and the cursor cannot walk outside this node.
+ */
 @NullMarked
 public final class TreeCursor implements AutoCloseable, Cloneable {
     private final MemorySegment self;
@@ -168,8 +173,8 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
     }
 
     /**
-     * Move the cursor to the first child of its current
-     * node that extends beyond the given byte offset.
+     * Move the cursor to the first child of its current node
+     * that contains or starts after the given byte offset.
      *
      * @return The index of the child node, if found.
      */
@@ -181,8 +186,8 @@ public final class TreeCursor implements AutoCloseable, Cloneable {
     }
 
     /**
-     * Move the cursor to the first child of its current
-     * node that extends beyond the given point.
+     * Move the cursor to the first child of its current node
+     * that contains or starts after the given point.
      *
      * @return The index of the child node, if found.
      */

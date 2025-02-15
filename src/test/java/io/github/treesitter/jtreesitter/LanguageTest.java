@@ -15,8 +15,18 @@ public class LanguageTest {
     }
 
     @Test
-    void getVersion() {
-        assertEquals(14, language.getVersion());
+    void getAbiVersion() {
+        assertEquals(14, language.getAbiVersion());
+    }
+
+    @Test
+    void getName() {
+        assertNull(language.getName());
+    }
+
+    @Test
+    void getMetadata() {
+        assertNull(language.getMetadata());
     }
 
     @Test
@@ -44,6 +54,16 @@ public class LanguageTest {
     void getSymbolForName() {
         assertEquals((short) 138, language.getSymbolForName("program", true));
         assertEquals((short) 0, language.getSymbolForName("$", false));
+    }
+
+    @Test
+    void getSupertypes() {
+        assertArrayEquals(new short[0], language.getSupertypes());
+    }
+
+    @Test
+    void getSubtypes() {
+        assertArrayEquals(new short[0], language.getSubtypes((short) 1));
     }
 
     @Test

@@ -434,7 +434,7 @@ public final class Node {
         children = null;
     }
 
-    /** Create a new tree cursor starting from this node. */
+    /** Create a new {@linkplain TreeCursor tree cursor} starting from this node. */
     public TreeCursor walk() {
         return new TreeCursor(this, tree);
     }
