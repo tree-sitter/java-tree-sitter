@@ -42,7 +42,7 @@ public enum InputEncoding {
      * @throws IllegalArgumentException If the character set is invalid.
      */
     @SuppressWarnings("SameParameterValue")
-    static @NonNull InputEncoding valueOf(@NonNull Charset charset) throws IllegalArgumentException {
+    public static @NonNull InputEncoding valueOf(@NonNull Charset charset) throws IllegalArgumentException {
         if (charset.equals(StandardCharsets.UTF_8)) return InputEncoding.UTF_8;
         if (charset.equals(StandardCharsets.UTF_16BE)) return InputEncoding.UTF_16BE;
         if (charset.equals(StandardCharsets.UTF_16LE)) return InputEncoding.UTF_16LE;
