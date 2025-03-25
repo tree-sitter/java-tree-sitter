@@ -293,7 +293,8 @@ public class QueryCursor implements AutoCloseable {
         private final @Nullable BiPredicate<QueryPredicate, QueryMatch> predicateCallback;
 
         /**
-         * @param progressCallback Progress handler.
+         * @param progressCallback Progress handler. Return {@code true} to cancel query execution,
+         *                         {@code false} to continue query execution.
          * @param predicateCallback Custom predicate handler.
          */
         private Options(
@@ -304,7 +305,8 @@ public class QueryCursor implements AutoCloseable {
         }
 
         /**
-         * @param progressCallback Progress handler.
+         * @param progressCallback Progress handler. Return {@code true} to cancel query execution,
+         *                         {@code false} to continue query execution.
          */
         public Options(Predicate<State> progressCallback) {
             this.progressCallback = progressCallback;
