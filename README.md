@@ -26,7 +26,6 @@ These alternatives support older JDK versions or Android:
 - [tree-sitter/kotlin-tree-sitter](https://github.com/tree-sitter/kotlin-tree-sitter) (JDK 17+, Android SDK 23+, Kotlin 1.9)
 - [bonede/tree-sitter-ng](https://github.com/bonede/tree-sitter-ng) (JDK 8+)
 - [seart-group/java-tree-sitter](https://github.com/seart-group/java-tree-sitter) (JDK 11+)
-- [AndroidIDEOfficial/android-tree-sitter](https://github.com/AndroidIDEOfficial/android-tree-sitter) (Android SDK 21+)
 
 [tree-sitter]: https://tree-sitter.github.io/tree-sitter/
 [ci]: https://img.shields.io/github/actions/workflow/status/tree-sitter/java-tree-sitter/ci.yml?logo=github&label=CI

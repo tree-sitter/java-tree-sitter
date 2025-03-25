@@ -14,6 +14,9 @@ import org.jspecify.annotations.Nullable;
  *
  * @apiNote The node the cursor was constructed with is considered the
  * root of the cursor, and the cursor cannot walk outside this node.
+ *
+ * @see Tree#walk()
+ * @see Node#walk()
  */
 @NullMarked
 public final class TreeCursor implements AutoCloseable, Cloneable {

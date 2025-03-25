@@ -26,6 +26,7 @@ public final class Parser implements AutoCloseable {
      * Creates a new instance with a {@code null} language.
      *
      * @apiNote Parsing cannot be performed while the language is {@code null}.
+     * @see #setLanguage(Language)
      */
     public Parser() {
         arena = Arena.ofShared();
@@ -400,6 +401,10 @@ public final class Parser implements AutoCloseable {
     public static final class Options {
         private final Predicate<State> progressCallback;
 
+        /**
+         * @param progressCallback Called when parsing progress was made. Return {@code true} to cancel parsing,
+         *                         {@code false} to continue parsing.
+         */
         public Options(Predicate<State> progressCallback) {
             this.progressCallback = progressCallback;
         }

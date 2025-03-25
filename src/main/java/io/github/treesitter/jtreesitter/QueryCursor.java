@@ -102,7 +102,7 @@ public class QueryCursor implements AutoCloseable {
      * than the specified range, but part of that node intersects with the range,
      * the entire match will be returned.
      *
-     * @throws IllegalArgumentException If `endByte > startByte`.
+     * @throws IllegalArgumentException If {@code endByte > startByte}.
      */
     public QueryCursor setByteRange(@Unsigned int startByte, @Unsigned int endByte) throws IllegalArgumentException {
         if (!ts_query_cursor_set_byte_range(self, startByte, endByte)) {
@@ -123,7 +123,7 @@ public class QueryCursor implements AutoCloseable {
      * than the specified range, but part of that node intersects with the range,
      * the entire match will be returned.
      *
-     * @throws IllegalArgumentException If `endPoint > startPoint`.
+     * @throws IllegalArgumentException If {@code endPoint > startPoint}.
      */
     public QueryCursor setPointRange(Point startPoint, Point endPoint) throws IllegalArgumentException {
         try (var alloc = Arena.ofConfined()) {
@@ -293,7 +293,8 @@ public class QueryCursor implements AutoCloseable {
         private final @Nullable BiPredicate<QueryPredicate, QueryMatch> predicateCallback;
 
         /**
-         * @param progressCallback Progress handler.
+         * @param progressCallback Progress handler. Return {@code true} to cancel query execution,
+         *                         {@code false} to continue query execution.
          * @param predicateCallback Custom predicate handler.
          */
         private Options(
@@ -304,7 +305,8 @@ public class QueryCursor implements AutoCloseable {
         }
 
         /**
-         * @param progressCallback Progress handler.
+         * @param progressCallback Progress handler. Return {@code true} to cancel query execution,
+         *                         {@code false} to continue query execution.
          */
         public Options(Predicate<State> progressCallback) {
             this.progressCallback = progressCallback;
