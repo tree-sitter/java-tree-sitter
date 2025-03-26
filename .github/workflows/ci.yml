@@ -5,13 +5,21 @@ on:
     branches: [master]
     paths:
       - pom.xml
+      - spotbugs-exclude.xml
+      - core
       - src/**
+      - scripts/jextract.*
+      - scripts/TreeSitter_java.patch
       - .github/workflows/ci.yml
   pull_request:
     branches: [master]
     paths:
       - pom.xml
+      - spotbugs-exclude.xml
+      - core
       - src/**
+      - scripts/jextract.*
+      - scripts/TreeSitter_java.patch
       - .github/workflows/ci.yml
 
 concurrency:
