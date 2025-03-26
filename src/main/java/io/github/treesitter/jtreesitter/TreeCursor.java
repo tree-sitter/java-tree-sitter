@@ -12,10 +12,11 @@ import org.jspecify.annotations.Nullable;
 /**
  * A class that can be used to efficiently walk a {@linkplain Tree syntax tree}.
  *
- * <p>A cursor can be created using {@link Tree#walk()} and {@link Node#walk()}.
- *
  * @apiNote The node the cursor was constructed with is considered the
  * root of the cursor, and the cursor cannot walk outside this node.
+ *
+ * @see Tree#walk()
+ * @see Node#walk()
  */
 @NullMarked
 public final class TreeCursor implements AutoCloseable, Cloneable {

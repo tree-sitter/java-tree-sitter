@@ -14,11 +14,11 @@ import org.jspecify.annotations.NullMarked;
 /**
  * A class that is used to look up valid symbols in a specific parse state.
  *
- * <p>Iterator instances can be created using {@link Language#lookaheadIterator(short)}.
- *
  * <p>Lookahead iterators can be useful to generate suggestions and improve syntax error diagnostics.<br>
  * To get symbols  valid in an {@index ERROR} node, use the lookahead iterator on its first leaf node state.<br>
  * For {@index MISSING} nodes, a lookahead iterator created on the previous non-extra leaf node may be appropriate.
+ *
+ * @see Language#lookaheadIterator(short)
  */
 @NullMarked
 public final class LookaheadIterator implements AutoCloseable, Iterator<LookaheadIterator.Symbol> {
