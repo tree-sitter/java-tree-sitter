@@ -1,5 +1,9 @@
 package io.github.treesitter.jtreesitter;
 
+import static io.github.treesitter.jtreesitter.internal.TreeSitter.TSInputEncodingUTF16BE;
+import static io.github.treesitter.jtreesitter.internal.TreeSitter.TSInputEncodingUTF16LE;
+import static io.github.treesitter.jtreesitter.internal.TreeSitter.TSInputEncodingUTF8;
+
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -8,28 +12,34 @@ import org.jspecify.annotations.NonNull;
 /** The encoding of source code. */
 public enum InputEncoding {
     /** UTF-8 encoding. */
-    UTF_8(StandardCharsets.UTF_8),
+    UTF_8(StandardCharsets.UTF_8, TSInputEncodingUTF8()),
     /**
      * UTF-16 little endian encoding.
      *
      * @since 0.25.0
      */
-    UTF_16LE(StandardCharsets.UTF_16LE),
+    UTF_16LE(StandardCharsets.UTF_16LE, TSInputEncodingUTF16LE()),
     /**
      * UTF-16 big endian encoding.
      *
      * @since 0.25.0
      */
-    UTF_16BE(StandardCharsets.UTF_16BE);
+    UTF_16BE(StandardCharsets.UTF_16BE, TSInputEncodingUTF16BE());
 
     private final @NonNull Charset charset;
+    private final int tsInputEncoding;
 
-    InputEncoding(@NonNull Charset charset) {
+    InputEncoding(@NonNull Charset charset, int tsInputEncoding) {
         this.charset = charset;
+        this.tsInputEncoding = tsInputEncoding;
     }
 
     Charset charset() {
         return charset;
+    }
+
+    int tsInputEncoding() {
+        return tsInputEncoding;
     }
 
     private static final boolean IS_BIG_ENDIAN = ByteOrder.nativeOrder().equals(ByteOrder.BIG_ENDIAN);

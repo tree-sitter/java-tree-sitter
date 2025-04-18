@@ -254,7 +254,7 @@ public final class Parser implements AutoCloseable {
             var bytes = source.getBytes(encoding.charset());
             var string = alloc.allocateFrom(C_CHAR, bytes);
             var old = oldTree == null ? MemorySegment.NULL : oldTree.segment();
-            var tree = ts_parser_parse_string_encoding(self, old, string, bytes.length, encoding.ordinal());
+            var tree = ts_parser_parse_string_encoding(self, old, string, bytes.length, encoding.tsInputEncoding());
             if (tree.equals(MemorySegment.NULL)) return Optional.empty();
             return Optional.of(new Tree(tree, language, source, encoding.charset()));
         }
@@ -303,7 +303,7 @@ public final class Parser implements AutoCloseable {
 
         var input = TSInput.allocate(arena);
         TSInput.payload(input, MemorySegment.NULL);
-        TSInput.encoding(input, encoding.ordinal());
+        TSInput.encoding(input, encoding.tsInputEncoding());
         // NOTE: can't use _ because of palantir/palantir-java-format#934
         var read = TSInput.read.allocate(
                 (payload, index, point, bytes) -> {

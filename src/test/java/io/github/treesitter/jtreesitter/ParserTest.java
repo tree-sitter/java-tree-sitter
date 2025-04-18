@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class ParserTest {
     private static Language language;
@@ -83,6 +85,21 @@ class ParserTest {
             assertEquals(
                     "(program (local_variable_declaration type: (type_identifier) declarator: (variable_declarator name: (identifier) value: (string_literal (string_fragment)))))",
                     rootNode.toSexp());
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(InputEncoding.class)
+    @DisplayName("parse(encoding)")
+    void parseEncoding(InputEncoding encoding) {
+        parser.setLanguage(language);
+        var source = "var text = \"☕ﬁ𝄞\";";
+        try (var tree = parser.parse(source, encoding).orElseThrow()) {
+            var rootNode = tree.getRootNode();
+
+            assertFalse(rootNode.isError());
+            assertEquals(source, tree.getText());
+            assertEquals(source, rootNode.getText());
         }
     }
 
