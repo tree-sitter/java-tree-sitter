@@ -160,7 +160,7 @@ class ParserTest {
         var source = "}".repeat(1024);
         // NOTE: can't use _ because of palantir/palantir-java-format#934
         ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
-        var options = new Parser.Options((state) -> state.getCurrentByteOffset() <= 1000);
+        var options = new Parser.Options((state) -> state.getCurrentByteOffset() >= 1000);
 
         parser.setLanguage(language);
         assertTrue(parser.parse(callback, InputEncoding.UTF_8, options).isEmpty());
