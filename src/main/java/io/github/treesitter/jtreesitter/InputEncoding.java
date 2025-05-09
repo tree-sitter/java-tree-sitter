@@ -40,6 +40,7 @@ public enum InputEncoding {
      * @param charset one of {@link StandardCharsets#UTF_8}, {@link StandardCharsets#UTF_16BE},
      *                {@link StandardCharsets#UTF_16LE}, or {@link StandardCharsets#UTF_16} (native byte order).
      * @throws IllegalArgumentException If the character set is invalid.
+     * @since 0.25.1
      */
     @SuppressWarnings("SameParameterValue")
     public static @NonNull InputEncoding valueOf(@NonNull Charset charset) throws IllegalArgumentException {
