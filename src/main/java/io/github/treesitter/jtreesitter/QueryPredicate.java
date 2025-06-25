@@ -125,7 +125,7 @@ public sealed class QueryPredicate permits QueryPredicate.AnyOf, QueryPredicate.
             if (findNodes1.isEmpty()) return !isPositive;
             Predicate<Node> predicate = node -> {
                 var text = Objects.requireNonNull(node.getText());
-                return pattern.matcher(text).hasMatch() == isPositive;
+                return pattern.matcher(text).find() == isPositive;
             };
             if (!isAny) return findNodes1.stream().allMatch(predicate);
             return findNodes1.stream().anyMatch(predicate);
