@@ -178,4 +178,19 @@ class QueryTest {
             assertEquals("FOO", assertions.get("foo").orElse(null));
         });
     }
+
+    @Test
+    void queryWithTwoPredicates() {
+        var source = """
+                ((identifier) @foo
+                 (#eq? @foo "foo")
+                 (#not-eq? @foo "bar"))
+                """
+                .stripIndent();
+        assertQuery(source, query -> {
+            assertEquals(1, query.getPatternCount());
+            assertIterableEquals(List.of("foo"), query.getCaptureNames());
+            assertIterableEquals(List.of("eq?", "foo", "not-eq?", "bar"), query.getStringValues());
+        });
+    }
 }

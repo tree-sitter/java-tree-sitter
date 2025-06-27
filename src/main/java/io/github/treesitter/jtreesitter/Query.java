@@ -267,7 +267,7 @@ public final class Query implements AutoCloseable {
                         predicates.get(i).add(new QueryPredicate(predicate, values));
                     }
                     j += nargs;
-                    tokens = TSQueryPredicateStep.asSlice(tokens, nargs);
+                    tokens = TSQueryPredicateStep.asSlice(tokens, nargs + 1);
                 }
             }
         }
