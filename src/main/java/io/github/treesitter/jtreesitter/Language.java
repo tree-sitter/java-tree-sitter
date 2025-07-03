@@ -67,6 +67,7 @@ public final class Language implements Cloneable {
      * <strong>The {@linkplain Arena} used to load the language
      * must not be closed while the language is being used.</strong>
      *
+     * @throws UnsatisfiedLinkError If the language symbol could not be found.
      * @throws RuntimeException If the language could not be loaded.
      * @since 0.23.1
      */
