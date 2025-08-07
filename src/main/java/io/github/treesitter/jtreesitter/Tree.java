@@ -44,6 +44,10 @@ public final class Tree implements AutoCloseable, Cloneable {
         return self;
     }
 
+    boolean hasText() {
+        return charset != null;
+    }
+
     @Nullable
     String getRegion(@Unsigned int start, @Unsigned int end) {
         var length = Math.min(end, source.length) - start;
@@ -57,7 +61,7 @@ public final class Tree implements AutoCloseable, Cloneable {
 
     /** Get the source code of the syntax tree, if available. */
     public @Nullable String getText() {
-        return charset != null ? new String(source, charset) : null;
+        return hasText() ? new String(source, charset) : null;
     }
 
     /** Get the root node of the syntax tree. */
@@ -161,6 +165,6 @@ public final class Tree implements AutoCloseable, Cloneable {
 
     @Override
     public String toString() {
-        return "Tree{language=%s, source=%s}".formatted(language, source);
+        return "Tree{language=%s, source=%s}".formatted(language, getText());
     }
 }

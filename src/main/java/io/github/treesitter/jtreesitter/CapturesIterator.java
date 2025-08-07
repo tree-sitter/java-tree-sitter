@@ -38,7 +38,7 @@ class CapturesIterator extends Spliterators.AbstractSpliterator<SimpleImmutableE
 
     @Override
     public boolean tryAdvance(Consumer<? super SimpleImmutableEntry<Integer, QueryMatch>> action) {
-        var hasNoText = tree.getText() == null;
+        var hasNoText = !tree.hasText();
         MemorySegment match = allocator.allocate(TSQueryMatch.layout());
         MemorySegment index = allocator.allocate(C_INT);
         var captureNames = query.getCaptureNames();

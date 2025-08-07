@@ -181,12 +181,13 @@ class QueryTest {
 
     @Test
     void queryWithTwoPredicates() {
-        var source = """
+        var source =
+                """
                 ((identifier) @foo
                  (#eq? @foo "foo")
                  (#not-eq? @foo "bar"))
                 """
-                .stripIndent();
+                        .stripIndent();
         assertQuery(source, query -> {
             assertEquals(1, query.getPatternCount());
             assertIterableEquals(List.of("foo"), query.getCaptureNames());

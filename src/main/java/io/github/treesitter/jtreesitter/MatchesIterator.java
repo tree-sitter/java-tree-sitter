@@ -36,7 +36,7 @@ class MatchesIterator extends Spliterators.AbstractSpliterator<QueryMatch> {
 
     @Override
     public boolean tryAdvance(Consumer<? super QueryMatch> action) {
-        var hasNoText = tree.getText() == null;
+        var hasNoText = !tree.hasText();
         MemorySegment match = allocator.allocate(TSQueryMatch.layout());
         var captureNames = query.getCaptureNames();
         while (ts_query_cursor_next_match(cursor, match)) {
