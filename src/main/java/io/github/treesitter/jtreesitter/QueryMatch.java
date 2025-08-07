@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.NullMarked;
 
-/** A match that corresponds to a certain pattern in the query. */
+/** A match that corresponds to a certain pattern in a {@link Query}. */
 @NullMarked
 public record QueryMatch(@Unsigned int patternIndex, List<QueryCapture> captures) {
     /** Creates an instance of a QueryMatch record class. */
