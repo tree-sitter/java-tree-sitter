@@ -27,8 +27,14 @@ final class ChainedLibraryLookup implements NativeLibraryLookup {
         try {
             var library = System.mapLibraryName("tree-sitter");
             return SymbolLookup.libraryLookup(library, arena);
-        } catch (IllegalArgumentException e) {
-            return SymbolLookup.loaderLookup();
+        } catch (IllegalArgumentException ex1) {
+            try {
+                System.loadLibrary("tree-sitter");
+                return SymbolLookup.loaderLookup();
+            } catch (UnsatisfiedLinkError ex2) {
+                ex1.addSuppressed(ex2);
+                throw ex1;
+            }
         }
     }
 }
