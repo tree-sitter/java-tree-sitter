@@ -74,7 +74,7 @@ public final class Parser implements AutoCloseable {
             var log = TSLogger.log.allocate(
                     (_, type, message) -> {
                         var logType = Logger.Type.values()[type];
-                        logger.accept(logType, message.getString(0));
+                        logger.log(logType, message.getString(0));
                     },
                     arena);
             TSLogger.log(segment, log);
@@ -266,7 +266,7 @@ public final class Parser implements AutoCloseable {
         TSInput.encoding(input, encoding.ordinal());
         var read = TSInput.read.allocate(
                 (_, index, point, bytes) -> {
-                    var result = parseCallback.apply(index, Point.from(point));
+                    var result = parseCallback.read(index, Point.from(point));
                     if (result == null) {
                         bytes.set(C_INT, 0, 0);
                         return MemorySegment.NULL;
