@@ -34,7 +34,7 @@ jobs:
         with:
           submodules: true
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 22
@@ -55,7 +55,7 @@ jobs:
       - name: Build javadoc
         run: mvn --no-transfer-progress javadoc:javadoc antrun:run@fix-javadoc
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: target/reports/apidocs
       - name: Publish to GitHub Pages
