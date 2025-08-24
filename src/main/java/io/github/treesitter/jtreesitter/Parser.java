@@ -244,18 +244,22 @@ public final class Parser implements AutoCloseable {
      *
      * @return An optional {@linkplain Tree} which is empty if parsing was halted.
      * @throws IllegalStateException If the parser does not have a language assigned.
+     * @throws IllegalArgumentException If given a custom {@link InputEncoding}.
      */
     public Optional<Tree> parse(String source, InputEncoding encoding, @Nullable Tree oldTree)
             throws IllegalStateException {
         if (language == null) {
             throw new IllegalStateException("The parser has no language assigned");
         }
+        if (encoding.encoding() == TSInputEncodingCustom()) {
+            throw new IllegalArgumentException("Custom encoding is not supported when parsing strings");
+        }
 
         try (var alloc = Arena.ofShared()) {
             var bytes = source.getBytes(encoding.charset());
             var string = alloc.allocateFrom(C_CHAR, bytes);
             var old = oldTree == null ? MemorySegment.NULL : oldTree.segment();
-            var tree = ts_parser_parse_string_encoding(self, old, string, bytes.length, encoding.ordinal());
+            var tree = ts_parser_parse_string_encoding(self, old, string, bytes.length, encoding.encoding());
             if (tree.equals(MemorySegment.NULL)) return Optional.empty();
             return Optional.of(new Tree(tree, language, source, encoding.charset()));
         }
@@ -304,7 +308,20 @@ public final class Parser implements AutoCloseable {
 
         var input = TSInput.allocate(arena);
         TSInput.payload(input, MemorySegment.NULL);
-        TSInput.encoding(input, encoding.ordinal());
+        TSInput.encoding(input, encoding.encoding());
+        var encoder = encoding.charset().newEncoder();
+        var decode = encoding.encoding() != TSInputEncodingCustom()
+                ? MemorySegment.NULL
+                : DecodeFunction.allocate(
+                        (string, length, code_point) -> {
+                            if (length == 0) return 0;
+                            var buffer = string.asSlice(0, length).asByteBuffer();
+                            var decoded = encoding.charset().decode(buffer);
+                            code_point.set(C_INT, 0, decoded.charAt(0));
+                            return (int)encoder.maxBytesPerChar();
+                        },
+                        arena);
+        TSInput.decode(input, decode);
         // NOTE: can't use _ because of palantir/palantir-java-format#934
         var read = TSInput.read.allocate(
                 (payload, index, point, bytes) -> {
@@ -365,6 +382,7 @@ public final class Parser implements AutoCloseable {
      *
      * @since 0.25.0
      */
+    @SuppressWarnings("ClassCanBeRecord")
     public static final class State {
         private final @Unsigned int currentByteOffset;
         private final boolean hasError;
@@ -398,6 +416,7 @@ public final class Parser implements AutoCloseable {
      * @since 0.25.0
      */
     @NullMarked
+    @SuppressWarnings("ClassCanBeRecord")
     public static final class Options {
         private final Predicate<State> progressCallback;
 

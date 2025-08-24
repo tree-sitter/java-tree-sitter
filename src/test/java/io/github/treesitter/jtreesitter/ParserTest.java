@@ -101,9 +101,9 @@ class ParserTest {
         assertEquals("LEX - done", messages.getLast());
     }
 
-    @SuppressWarnings("unused")
     @Test
     @DisplayName("parse(callback)")
+    @SuppressWarnings("unused")
     void parseCallback() {
         var source = "class Foo {}";
         // NOTE: can't use _ because of palantir/palantir-java-format#934
@@ -151,6 +151,24 @@ class ParserTest {
             assertTrue(result.get(30L, TimeUnit.MILLISECONDS).isEmpty());
         } catch (InterruptedException | CancellationException | ExecutionException | TimeoutException e) {
             fail("Parsing was not halted gracefully", e);
+        }
+    }
+
+    @Test
+    @DisplayName("parse(custom)")
+    void parseCustom() {
+        parser.setLanguage(language);
+        var encoding = InputEncoding.valueOf(StandardCharsets.UTF_32);
+        var source = "var value = \"\uD83C\uDF00\uD83C\uDFEF\";";
+        ParseCallback callback = (offset, p) -> offset == 0 ? source : null;
+        try (var tree = parser.parse(callback, encoding).orElseThrow()) {
+            var rootNode = tree.getRootNode();
+
+            assertEquals(68, rootNode.getEndByte());
+            assertFalse(rootNode.isError());
+            assertEquals(
+                    "(program (local_variable_declaration type: (type_identifier) declarator: (variable_declarator name: (identifier) value: (string_literal (string_fragment)))))",
+                    rootNode.toSexp());
         }
     }
 
