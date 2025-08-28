@@ -43,10 +43,9 @@
  *     SymbolLookup.libraryLookup(String, Arena)}.
  * </li>
  * <li>
- *     The libraries can be loaded manually by calling
- *     {@link java.lang.System#loadLibrary(String) System.loadLibrary(String)},
- *     if the library is installed in {@systemProperty java.library.path},
- *     or {@link java.lang.System#load(String) System.load(String)}.
+ *     If the libraries are installed in {@systemProperty java.library.path} instead,
+ *     they will be loaded automatically by {@link java.lang.foreign.SymbolLookup#loaderLookup()
+ *     SymbolLookup.loaderLookup()}.
  * </li>
  * <li>
  *     The libraries can be loaded manually by registering a custom implementation of
