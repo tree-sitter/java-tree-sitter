@@ -100,7 +100,7 @@ public final class Parser implements AutoCloseable {
             var log = TSLogger.log.allocate(
                     (p, type, message) -> {
                         var logType = Logger.Type.values()[type];
-                        logger.accept(logType, message.getString(0));
+                        logger.log(logType, message.getString(0));
                     },
                     arena);
             TSLogger.log(segment, log);
@@ -308,7 +308,7 @@ public final class Parser implements AutoCloseable {
         // NOTE: can't use _ because of palantir/palantir-java-format#934
         var read = TSInput.read.allocate(
                 (payload, index, point, bytes) -> {
-                    var result = parseCallback.apply(index, Point.from(point));
+                    var result = parseCallback.read(index, Point.from(point));
                     if (result == null) {
                         bytes.set(C_INT, 0, 0);
                         return MemorySegment.NULL;
