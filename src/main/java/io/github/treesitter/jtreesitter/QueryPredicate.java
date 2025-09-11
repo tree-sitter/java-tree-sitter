@@ -77,9 +77,9 @@ public sealed class QueryPredicate permits QueryPredicate.AnyOf, QueryPredicate.
 
         private boolean testCapture(QueryMatch match) {
             var findNodes1 = match.findNodes(capture).stream();
-            var findNodes2 = match.findNodes(value).stream();
+            var findNodes2 = match.findNodes(value);
             Predicate<Node> predicate =
-                    n1 -> findNodes2.anyMatch(n2 -> Objects.equals(n1.getText(), n2.getText()) == isPositive);
+                    n1 -> findNodes2.stream().anyMatch(n2 -> Objects.equals(n1.getText(), n2.getText()) == isPositive);
             return isAny ? findNodes1.anyMatch(predicate) : findNodes1.allMatch(predicate);
         }
 
