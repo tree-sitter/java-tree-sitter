@@ -175,5 +175,21 @@ public class QueryCursorTest {
                 assertEquals(Short.MAX_VALUE + 1, matches.getFirst().captures().size());
             });
         }
+
+        // Verify that `eq?` predicate works with quantified captures
+        try (var tree = parser.parse("/* 1 */ /* 1 */ /* 1 */").orElseThrow()) {
+            var source = """
+                (program
+                  . (block_comment) @b (block_comment)+ @a
+                  (#eq? @a @b)
+                )
+                """;
+            assertCursor(source, cursor -> {
+                var matches = cursor.findMatches(tree.getRootNode()).toList();
+                assertEquals(1, matches.size());
+                assertEquals(
+                    "/* 1 */", matches.getFirst().captures().getFirst().node().getText());
+            });
+        }
     }
 }
