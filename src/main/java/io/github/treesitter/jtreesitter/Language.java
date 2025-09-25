@@ -158,8 +158,9 @@ public final class Language implements Cloneable {
         try (var alloc = Arena.ofConfined()) {
             var length = alloc.allocate(C_INT.byteSize(), C_INT.byteAlignment());
             var supertypes = ts_language_supertypes(self, length);
-            var isEmpty = length.get(C_INT, 0) == 0;
-            return isEmpty ? new short[0] : supertypes.toArray(C_SHORT);
+            var size = length.get(C_INT, 0);
+            if (size == 0) return new short[0];
+            return supertypes.asSlice(0, size * C_SHORT.byteSize()).toArray(C_SHORT);
         }
     }
 
@@ -173,8 +174,9 @@ public final class Language implements Cloneable {
         try (var alloc = Arena.ofConfined()) {
             var length = alloc.allocate(C_INT.byteSize(), C_INT.byteAlignment());
             var subtypes = ts_language_subtypes(self, supertype, length);
-            var isEmpty = length.get(C_INT, 0) == 0;
-            return isEmpty ? new short[0] : subtypes.toArray(C_SHORT);
+            var size = length.get(C_INT, 0);
+            if (size == 0) return new short[0];
+            return subtypes.asSlice(0, size * C_SHORT.byteSize()).toArray(C_SHORT);
         }
     }
 
