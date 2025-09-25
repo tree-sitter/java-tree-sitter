@@ -16,17 +16,17 @@ public class LanguageTest {
 
     @Test
     void getAbiVersion() {
-        assertEquals(14, language.getAbiVersion());
+        assertEquals(15, language.getAbiVersion());
     }
 
     @Test
     void getName() {
-        assertNull(language.getName());
+        assertEquals("java", language.getName());
     }
 
     @Test
     void getMetadata() {
-        assertNull(language.getMetadata());
+        assertNotNull(language.getMetadata());
     }
 
     @Test
@@ -58,12 +58,15 @@ public class LanguageTest {
 
     @Test
     void getSupertypes() {
-        assertArrayEquals(new short[0], language.getSupertypes());
+        assertArrayEquals(
+            new short[]{ 140, 263, 264, 216, 147, 219, 157, 185 },
+            language.getSupertypes()
+        );
     }
 
     @Test
     void getSubtypes() {
-        assertArrayEquals(new short[0], language.getSubtypes((short) 1));
+        assertEquals(21, language.getSubtypes((short) 185).length);
     }
 
     @Test
