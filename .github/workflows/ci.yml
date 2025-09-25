@@ -52,8 +52,7 @@ jobs:
       - name: Get tree-sitter commit
         shell: sh
         run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
-      - name: Set up tree-sitter CLI
-        if: runner.os == 'Windows'
+      - name: Set up tree-sitter
         uses: tree-sitter/setup-action/cli@v2
       - name: Set up tree-sitter library
         uses: tree-sitter/setup-action/lib@v2
@@ -64,8 +63,10 @@ jobs:
         run: |-
           git clone --depth=1 https://github.com/tree-sitter/tree-sitter-java
           cd tree-sitter-java
+          tree-sitter generate --abi=15
           cmake -B build \
             -DBUILD_SHARED_LIBS=ON \
+            -DTREE_SITTER_ABI_VERSION=15 \
             -DCMAKE_INSTALL_LIBDIR=lib \
             -DCMAKE_INSTALL_BINDIR=lib \
             -DCMAKE_INSTALL_PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
