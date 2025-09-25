@@ -96,9 +96,8 @@ public final class Parser implements AutoCloseable {
         } else {
             var segment = TSLogger.allocate(arena);
             TSLogger.payload(segment, MemorySegment.NULL);
-            // NOTE: can't use _ because of palantir/palantir-java-format#934
             var log = TSLogger.log.allocate(
-                    (p, type, message) -> {
+                    (_, type, message) -> {
                         var logType = Logger.Type.values()[type];
                         logger.accept(logType, message.getString(0));
                     },
@@ -305,9 +304,8 @@ public final class Parser implements AutoCloseable {
         var input = TSInput.allocate(arena);
         TSInput.payload(input, MemorySegment.NULL);
         TSInput.encoding(input, encoding.ordinal());
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
         var read = TSInput.read.allocate(
-                (payload, index, point, bytes) -> {
+                (_, index, point, bytes) -> {
                     var result = parseCallback.apply(index, Point.from(point));
                     if (result == null) {
                         bytes.set(C_INT, 0, 0);
@@ -437,8 +435,7 @@ public final class Parser implements AutoCloseable {
         /** Set the value of the flag. */
         @SuppressWarnings("unused")
         public void set(long value) {
-            // NOTE: can't use _ because of palantir/palantir-java-format#934
-            segment.set(C_LONG_LONG, 0L, this.value.updateAndGet(o -> value));
+            segment.set(C_LONG_LONG, 0L, this.value.updateAndGet(_ -> value));
         }
     }
 }

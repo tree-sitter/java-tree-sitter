@@ -106,8 +106,7 @@ class ParserTest {
     @DisplayName("parse(callback)")
     void parseCallback() {
         var source = "class Foo {}";
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(offset, source.length()));
+        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(offset, source.length()));
         parser.setLanguage(language);
         try (var tree = parser.parse(callback, InputEncoding.UTF_8).orElseThrow()) {
             assertNull(tree.getText());
@@ -120,8 +119,7 @@ class ParserTest {
     @SuppressWarnings("deprecation")
     void parseTimeout() {
         var source = "}".repeat(1024);
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
 
         parser.setLanguage(language).setTimeoutMicros(2L);
         assertTrue(parser.parse(callback, InputEncoding.UTF_8).isEmpty());
@@ -132,8 +130,7 @@ class ParserTest {
     @SuppressWarnings("deprecation")
     void parseCancellation() {
         var source = "}".repeat(1024 * 1024);
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
 
         var flag = new Parser.CancellationFlag();
         parser.setLanguage(language).setCancellationFlag(flag);
@@ -158,8 +155,7 @@ class ParserTest {
     @DisplayName("parse(options)")
     void parseOptions() {
         var source = "}".repeat(1024);
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
         var options = new Parser.Options((state) -> state.getCurrentByteOffset() >= 1000);
 
         parser.setLanguage(language);
@@ -169,8 +165,7 @@ class ParserTest {
     @Test
     void reset() {
         var source = "class foo bar() {}";
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        ParseCallback callback = (offset, p) -> source.substring(offset, Integer.min(source.length(), offset + 1));
+        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
         var options = new Parser.Options(Parser.State::hasError);
 
         parser.setLanguage(language);

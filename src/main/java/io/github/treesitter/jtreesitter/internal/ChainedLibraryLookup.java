@@ -16,8 +16,7 @@ final class ChainedLibraryLookup implements NativeLibraryLookup {
     @Override
     public SymbolLookup get(Arena arena) {
         var serviceLoader = ServiceLoader.load(NativeLibraryLookup.class);
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        SymbolLookup lookup = (name) -> Optional.empty();
+        SymbolLookup lookup = (_) -> Optional.empty();
         for (var libraryLookup : serviceLoader) {
             lookup = lookup.or(libraryLookup.get(arena));
         }

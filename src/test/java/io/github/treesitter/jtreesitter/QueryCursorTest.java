@@ -107,12 +107,12 @@ public class QueryCursorTest {
         try (var tree = parser.parse("int y = x + 1;").orElseThrow()) {
             var source =
                     """
-            ((variable_declarator
-              (identifier) @y
-              (binary_expression
-                (identifier) @x))
-              (#not-eq? @y @x))
-            """
+                    ((variable_declarator
+                      (identifier) @y
+                      (binary_expression
+                        (identifier) @x))
+                      (#not-eq? @y @x))
+                    """
                             .stripIndent();
             assertCursor(source, cursor -> {
                 var matches = cursor.findMatches(tree.getRootNode()).toList();
@@ -178,17 +178,20 @@ public class QueryCursorTest {
 
         // Verify that `eq?` predicate works with quantified captures
         try (var tree = parser.parse("/* 1 */ /* 1 */ /* 1 */").orElseThrow()) {
-            var source = """
-                (program
-                  . (block_comment) @b (block_comment)+ @a
-                  (#eq? @a @b)
-                )
-                """;
+            var source =
+                    """
+                    (program
+                      .
+                      (block_comment) @b
+                      (block_comment)+ @a
+                      (#eq? @a @b))
+                    """;
             assertCursor(source, cursor -> {
                 var matches = cursor.findMatches(tree.getRootNode()).toList();
                 assertEquals(1, matches.size());
                 assertEquals(
-                    "/* 1 */", matches.getFirst().captures().getFirst().node().getText());
+                        "/* 1 */",
+                        matches.getFirst().captures().getFirst().node().getText());
             });
         }
     }

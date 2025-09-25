@@ -36,8 +36,7 @@ class QueryTest {
 
     @SuppressWarnings("unused")
     private static void assertError(Class<? extends QueryError> type, String source, String message) {
-        // NOTE: can't use _ because of palantir/palantir-java-format#934
-        try (var q = new Query(language, source)) {
+        try (var _ = new Query(language, source)) {
             fail("Expected QueryError to be thrown, but nothing was thrown.");
         } catch (QueryError ex) {
             assertInstanceOf(type, ex);
