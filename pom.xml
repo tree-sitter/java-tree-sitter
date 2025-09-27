@@ -154,7 +154,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>2.46.1</version>
+        <version>3.0.0</version>
         <executions>
           <execution>
             <id>format-sources</id>
@@ -213,7 +213,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.11.3</version>
+        <version>3.12.0</version>
         <executions>
           <execution>
             <goals>
@@ -281,7 +281,7 @@
       <plugin>
         <groupId>io.github.mavenplugins</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>1.1.0</version>
+        <version>1.1.1</version>
         <executions>
           <execution>
             <phase>deploy</phase>
