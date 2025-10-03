@@ -37,7 +37,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 22
+          java-version: 25
           cache: maven
       - name: Set up tree-sitter
         uses: tree-sitter/setup-action/lib@v2
