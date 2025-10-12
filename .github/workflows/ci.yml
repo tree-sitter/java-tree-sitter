@@ -92,7 +92,7 @@ jobs:
         if: "!cancelled() && github.event_name == 'push'"
         run: mvn antrun:run@patch-sarif
       - name: Upload SpotBugs SARIF report
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: "!cancelled() && github.event_name == 'push'"
         with:
           category: spotbugs
