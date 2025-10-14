@@ -21,7 +21,8 @@ final class ChainedLibraryLookup implements NativeLibraryLookup {
         for (var libraryLookup : serviceLoader) {
             lookup = lookup.or(libraryLookup.get(arena));
         }
-        return lookup.or(findLibrary(arena)).or(Linker.nativeLinker().defaultLookup());
+
+        return lookup.or((name) -> findLibrary(arena).find(name)).or(Linker.nativeLinker().defaultLookup());
     }
 
     private static SymbolLookup findLibrary(Arena arena) {
