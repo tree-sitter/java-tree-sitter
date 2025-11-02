@@ -1,22 +1,17 @@
 --- a/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
 +++ b/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter.java
-@@ -55,9 +55,7 @@
-         };
-     }
+@@ -20,9 +20,11 @@ public class TreeSitter extends TreeSitter$shared {
+ 
+     static final Arena LIBRARY_ARENA = Arena.ofAuto();
  
 -    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("tree-sitter"), LIBRARY_ARENA)
 -            .or(SymbolLookup.loaderLookup())
 -            .or(Linker.nativeLinker().defaultLookup());
 +    static final SymbolLookup SYMBOL_LOOKUP = ChainedLibraryLookup.INSTANCE.get(LIBRARY_ARENA);
- 
-     public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
-     public static final ValueLayout.OfByte C_CHAR = ValueLayout.JAVA_BYTE;
-@@ -8599,4 +8606,8 @@ public class TreeSitter {
-            throw new AssertionError("should not reach here", ex$);
-         }
-     }
 +
 +    static {
 +       ts_set_allocator(malloc$address(), calloc$address(), realloc$address(), free$address());
 +    }
- }
+ 
+     private static final int TREE_SITTER_LANGUAGE_VERSION = (int)15L;
+     /**

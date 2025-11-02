@@ -46,10 +46,10 @@ jobs:
       - name: Set up jextract
         run: |-
           curl -LSs '${{env.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
-          printf '%s/jextract-22/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+          printf '%s/jextract-25/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
         env:
           # NOTE: keep this in sync with ci, docs
-          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/22/6/openjdk-22-jextract+6-47_linux-x64_bin.tar.gz
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
       - name: Deploy to Maven Central
         run: mvn --no-transfer-progress deploy -Dspotbugs.skip=true
         env:
