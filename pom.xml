@@ -244,7 +244,7 @@
           </links>
           <excludePackageNames>io.github.treesitter.jtreesitter.internal</excludePackageNames>
           <header><![CDATA[
-          <img src="/tree-sitter/assets/images/tree-sitter-small.png" style="height:100%;width:auto;padding:0.4em" alt="logo"/>
+          <img src="/tree-sitter/assets/images/tree-sitter-small.png" style="height:calc(0.8 * var(--top-nav-height));width:auto;padding:0.4em" alt="logo"/>
           ]]></header>
         </configuration>
       </plugin>
