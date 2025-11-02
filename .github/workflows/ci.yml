@@ -98,7 +98,7 @@ jobs:
           category: spotbugs
           sarif_file: target/reports/spotbugsSarif.json
       - name: Upload JUnit XML report
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@v6
         if: "!cancelled()"
         with:
           annotate_only: true
