@@ -173,7 +173,7 @@ public class QueryCursor implements AutoCloseable {
      * @implNote The lifetime of the matches is bound to that of the cursor.
      */
     public Stream<SimpleImmutableEntry<Integer, QueryMatch>> findCaptures(Node node) {
-        return findCaptures(node, arena, new Options(null, null));
+        return findCaptures(node, arena, null);
     }
 
     /**
@@ -183,6 +183,7 @@ public class QueryCursor implements AutoCloseable {
      * and just want a single, ordered sequence of captures.
      *
      * @param node The node that the query will run on.
+     * @param options The options of the query cursor.
      *
      * @implNote The lifetime of the matches is bound to that of the cursor.
      */
@@ -197,11 +198,13 @@ public class QueryCursor implements AutoCloseable {
      * and just want a single, ordered sequence of captures.
      *
      * @param node The node that the query will run on.
+     * @param options The options of the query cursor.
      */
     public Stream<SimpleImmutableEntry<Integer, QueryMatch>> findCaptures(
-            Node node, SegmentAllocator allocator, Options options) {
+            Node node, SegmentAllocator allocator, @Nullable Options options) {
         exec(node, options);
-        var iterator = new CapturesIterator(query, self, node.getTree(), allocator, options.predicateCallback);
+        var callback = options != null ? options.predicateCallback : null;
+        var iterator = new CapturesIterator(query, self, node.getTree(), allocator, callback);
         return StreamSupport.stream(iterator, false);
     }
 
@@ -216,7 +219,7 @@ public class QueryCursor implements AutoCloseable {
      * @implNote The lifetime of the matches is bound to that of the cursor.
      */
     public Stream<QueryMatch> findMatches(Node node) {
-        return findMatches(node, arena, new Options(null, null));
+        return findMatches(node, arena, null);
     }
 
     /**
@@ -238,6 +241,7 @@ public class QueryCursor implements AutoCloseable {
      *}
      *
      * @param node The node that the query will run on.
+     * @param options The options of the query cursor.
      *
      * @implNote The lifetime of the matches is bound to that of the cursor.
      */
@@ -252,12 +256,14 @@ public class QueryCursor implements AutoCloseable {
      * captures that appear <em>before</em> some of the captures from a previous match.
      *
      * @param node The node that the query will run on.
+     * @param options The options of the query cursor.
      *
      * @see #findMatches(Node, Options)
      */
-    public Stream<QueryMatch> findMatches(Node node, SegmentAllocator allocator, Options options) {
+    public Stream<QueryMatch> findMatches(Node node, SegmentAllocator allocator, @Nullable Options options) {
         exec(node, options);
-        var iterator = new MatchesIterator(query, self, node.getTree(), allocator, options.predicateCallback);
+        var callback = options != null ? options.predicateCallback : null;
+        var iterator = new MatchesIterator(query, self, node.getTree(), allocator, callback);
         return StreamSupport.stream(iterator, false);
     }
 
@@ -297,7 +303,7 @@ public class QueryCursor implements AutoCloseable {
          *                         {@code false} to continue query execution.
          * @param predicateCallback Custom predicate handler.
          */
-        private Options(
+        public Options(
                 @Nullable Predicate<State> progressCallback,
                 @Nullable BiPredicate<QueryPredicate, QueryMatch> predicateCallback) {
             this.progressCallback = progressCallback;
