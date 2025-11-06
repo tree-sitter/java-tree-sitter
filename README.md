@@ -8,7 +8,7 @@ Java bindings to the [tree-sitter] parsing library.
 
 ## Building
 
-- Install JDK 22 and set `JAVA_HOME` to it
+- Install JDK 23+ and set `JAVA_HOME` to it
 - Download [jextract] and add it to your `PATH`
 - Install the `tree-sitter` & `tree-sitter-java` libraries
 
@@ -31,5 +31,5 @@ These alternatives support older JDK versions or Android:
 [ci]: https://img.shields.io/github/actions/workflow/status/tree-sitter/java-tree-sitter/ci.yml?logo=github&label=CI
 [central]: https://img.shields.io/maven-central/v/io.github.tree-sitter/jtreesitter?logo=sonatype&label=Maven%20Central
 [docs]: https://img.shields.io/github/deployments/tree-sitter/java-tree-sitter/github-pages?logo=githubpages&label=API%20Docs
-[FFM]: https://docs.oracle.com/en/java/javase/22/core/foreign-function-and-memory-api.html
+[FFM]: https://docs.oracle.com/en/java/javase/23/core/foreign-function-and-memory-api.html
 [jextract]: https://jdk.java.net/jextract/
