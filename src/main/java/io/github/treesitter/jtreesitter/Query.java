@@ -149,7 +149,8 @@ public final class Query implements AutoCloseable {
                 if ((steps = count.get(C_INT, 0)) == 0) continue;
                 int offset = ts_query_start_byte_for_pattern(query, i);
                 long row = source.chars().limit(offset).filter(c -> c == '\n').count();
-                for (long j = 0, nargs = 0; j < steps; ++j) {
+                for (long j = 0; j < steps; ++j) {
+                    long nargs = 0;
                     for (; ; ++nargs) {
                         var t = TSQueryPredicateStep.asSlice(tokens, nargs);
                         if (TSQueryPredicateStep.type(t) == TSQueryPredicateStepTypeDone()) break;
