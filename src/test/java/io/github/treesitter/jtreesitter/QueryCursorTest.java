@@ -177,13 +177,16 @@ public class QueryCursorTest {
         }
 
         // Verify that `eq?` predicate works with quantified captures
-        try (var tree = parser.parse("/* 1 */ /* 1 */ /* 1 */").orElseThrow()) {
+        try (var tree = parser.parse("/* 1 */ /* 1 */ {} /* 1 */ /* 1 */").orElseThrow()) {
             var source =
                     """
                     (program
                       .
-                      (block_comment) @b
                       (block_comment)+ @a
+                      .
+                      (block)
+                      .
+                      (block_comment)+ @b
                       (#eq? @a @b))
                     """;
             assertCursor(source, cursor -> {
