@@ -302,6 +302,8 @@ public class QueryCursor implements AutoCloseable {
          * @param progressCallback Progress handler. Return {@code true} to cancel query execution,
          *                         {@code false} to continue query execution.
          * @param predicateCallback Custom predicate handler.
+         *
+         * @since 0.25.7
          */
         public Options(
                 @Nullable Predicate<State> progressCallback,
