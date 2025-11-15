@@ -139,7 +139,6 @@ public final class Query implements AutoCloseable {
         return !(Character.isLetterOrDigit(c) || c == '_' || c == '-' || c == '.' || c == '?' || c == '!');
     }
 
-    @SuppressWarnings("DuplicatedCode")
     private void handlePredicates(String source, MemorySegment query, @Unsigned int patternCount)
             throws QueryError.Predicate {
         try (var alloc = Arena.ofConfined()) {
@@ -149,6 +148,8 @@ public final class Query implements AutoCloseable {
                 if ((steps = count.get(C_INT, 0)) == 0) continue;
                 int offset = ts_query_start_byte_for_pattern(query, i);
                 long row = source.chars().limit(offset).filter(c -> c == '\n').count();
+                var predicates = this.predicates.get(i);
+
                 for (long j = 0; j < steps; ++j) {
                     long nargs = 0;
                     for (; ; ++nargs) {
@@ -160,99 +161,20 @@ public final class Query implements AutoCloseable {
                         var name = captureNames.get(TSQueryPredicateStep.value_id(t0));
                         throw new QueryError.Predicate(row, "@%s".formatted(name));
                     }
+
                     var predicate = stringValues.get(TSQueryPredicateStep.value_id(t0));
                     if (QueryPredicate.Eq.NAMES.contains(predicate)) {
-                        if (nargs != 3) {
-                            var error = "#%s expects 2 arguments, got %d";
-                            throw new QueryError.Predicate(row, error, predicate, nargs - 1);
-                        }
-                        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
-                        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeCapture()) {
-                            var value = stringValues.get(TSQueryPredicateStep.value_id(t1));
-                            var error = "first argument to #%s must be a capture name, got \"%s\"";
-                            throw new QueryError.Predicate(row, error, predicate, value);
-                        }
-                        var capture = captureNames.get(TSQueryPredicateStep.value_id(t1));
-                        var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
-                        var id = TSQueryPredicateStep.value_id(t2);
-                        var isCapture = TSQueryPredicateStep.type(t2) == TSQueryPredicateStepTypeCapture();
-                        var value = isCapture ? captureNames.get(id) : stringValues.get(id);
-                        predicates.get(i).add(new QueryPredicate.Eq(predicate, capture, value, isCapture));
+                        predicates.add(handlePredicateEq(predicate, tokens, nargs, row));
                     } else if (QueryPredicate.Match.NAMES.contains(predicate)) {
-                        if (nargs != 3) {
-                            var error = "#%s expects 2 arguments, got %d";
-                            throw new QueryError.Predicate(row, error, predicate, nargs - 1);
-                        }
-                        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
-                        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeCapture()) {
-                            var value = stringValues.get(TSQueryPredicateStep.value_id(t1));
-                            var error = "first argument to #%s must be a capture name, got \"%s\"";
-                            throw new QueryError.Predicate(row, error, predicate, value);
-                        }
-                        var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
-                        if (TSQueryPredicateStep.type(t2) != TSQueryPredicateStepTypeString()) {
-                            var value = captureNames.get(TSQueryPredicateStep.value_id(t2));
-                            var error = "second argument to #%s must be a string literal, got @%s";
-                            throw new QueryError.Predicate(row, error, predicate, value);
-                        }
-                        try {
-                            var capture = captureNames.get(TSQueryPredicateStep.value_id(t1));
-                            var pattern = Pattern.compile(stringValues.get(TSQueryPredicateStep.value_id(t2)));
-                            predicates.get(i).add(new QueryPredicate.Match(predicate, capture, pattern));
-                        } catch (PatternSyntaxException e) {
-                            throw new QueryError.Predicate(row, "pattern error", e);
-                        }
+                        predicates.add(handlePredicateMatch(predicate, tokens, nargs, row));
                     } else if (QueryPredicate.AnyOf.NAMES.contains(predicate)) {
-                        if (nargs < 3) {
-                            var error = "#%s expects at least 2 arguments, got %d";
-                            throw new QueryError.Predicate(row, error, predicate, nargs - 1);
-                        }
-                        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
-                        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeCapture()) {
-                            var value = stringValues.get(TSQueryPredicateStep.value_id(t1));
-                            var error = "first argument to #%s must be a capture name, got \"%s\"";
-                            throw new QueryError.Predicate(row, error, predicate, value);
-                        }
-                        List<String> values = new ArrayList<>((int) nargs - 2);
-                        for (long k = 2; k < nargs; ++k) {
-                            var t = TSQueryPredicateStep.asSlice(tokens, k);
-                            if (TSQueryPredicateStep.type(t) != TSQueryPredicateStepTypeString()) {
-                                var value = captureNames.get(TSQueryPredicateStep.value_id(t));
-                                var error = "arguments to #%s must be string literals, got @%s";
-                                throw new QueryError.Predicate(row, error, predicate, value);
-                            }
-                            values.add(stringValues.get(TSQueryPredicateStep.value_id(t)));
-                        }
-                        var capture = captureNames.get(TSQueryPredicateStep.value_id(t1));
-                        predicates.get(i).add(new QueryPredicate.AnyOf(predicate, capture, values));
-                    } else if (predicate.equals("is?") || predicate.equals("is-not?") || predicate.equals("set!")) {
-                        if (nargs == 1 || nargs > 3) {
-                            var error = "#%s expects 1-2 arguments, got %d";
-                            throw new QueryError.Predicate(row, error, predicate, nargs - 1);
-                        }
-                        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
-                        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeString()) {
-                            var value = captureNames.get(TSQueryPredicateStep.value_id(t1));
-                            var error = "first argument to #%s must be a string literal, got @%s";
-                            throw new QueryError.Predicate(row, error, predicate, value);
-                        }
-                        String key = stringValues.get(TSQueryPredicateStep.value_id(t1)), value = null;
-                        if (nargs == 3) {
-                            var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
-                            if (TSQueryPredicateStep.type(t2) != TSQueryPredicateStepTypeString()) {
-                                var capture = captureNames.get(TSQueryPredicateStep.value_id(t2));
-                                var error = "second argument to #%s must be a string literal, got @%s";
-                                throw new QueryError.Predicate(row, error, predicate, capture);
-                            }
-                            value = stringValues.get(TSQueryPredicateStep.value_id(t2));
-                        }
-                        if (predicate.equals("is?")) {
-                            positiveAssertions.get(i).put(key, Optional.ofNullable(value));
-                        } else if (predicate.equals("is-not?")) {
-                            negativeAssertions.get(i).put(key, Optional.ofNullable(value));
-                        } else {
-                            settings.get(i).put(key, Optional.ofNullable(value));
-                        }
+                        predicates.add(handlePredicateAnyOf(predicate, tokens, nargs, row));
+                    } else if (predicate.equals("is?") || predicate.equals("is-not?")) {
+                        var assertions = (predicate.equals("is?") ? positiveAssertions : negativeAssertions).get(i);
+                        handlePredicateAssertion(predicate, tokens, nargs, row, assertions);
+                    } else if (predicate.equals("set!")) {
+                        var settings = this.settings.get(i);
+                        handleDirectiveSet(predicate, tokens, nargs, row, settings);
                     } else {
                         List<QueryPredicateArg> values = new ArrayList<>((int) nargs - 1);
                         for (long k = 1; k < nargs; ++k) {
@@ -265,13 +187,138 @@ public final class Query implements AutoCloseable {
                                 values.add(new QueryPredicateArg.Capture(capture));
                             }
                         }
-                        predicates.get(i).add(new QueryPredicate(predicate, values));
+                        predicates.add(new QueryPredicate(predicate, values));
                     }
                     j += nargs;
                     tokens = TSQueryPredicateStep.asSlice(tokens, nargs + 1);
                 }
             }
         }
+    }
+
+    /** {@code #eq?} predicate */
+    private QueryPredicate handlePredicateEq(String name, MemorySegment tokens, long nargs, long row) {
+        if (nargs != 3) {
+            var error = "#%s expects 2 arguments, got %d";
+            throw new QueryError.Predicate(row, error, name, nargs - 1);
+        }
+        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
+        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeCapture()) {
+            var value = stringValues.get(TSQueryPredicateStep.value_id(t1));
+            var error = "first argument to #%s must be a capture name, got \"%s\"";
+            throw new QueryError.Predicate(row, error, name, value);
+        }
+        var capture = captureNames.get(TSQueryPredicateStep.value_id(t1));
+        var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
+        var id = TSQueryPredicateStep.value_id(t2);
+        var isCapture = TSQueryPredicateStep.type(t2) == TSQueryPredicateStepTypeCapture();
+        var value = isCapture ? captureNames.get(id) : stringValues.get(id);
+        return new QueryPredicate.Eq(name, capture, value, isCapture);
+    }
+
+    /** {@code #match?} predicate */
+    private QueryPredicate handlePredicateMatch(String name, MemorySegment tokens, long nargs, long row) {
+        if (nargs != 3) {
+            var error = "#%s expects 2 arguments, got %d";
+            throw new QueryError.Predicate(row, error, name, nargs - 1);
+        }
+        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
+        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeCapture()) {
+            var value = stringValues.get(TSQueryPredicateStep.value_id(t1));
+            var error = "first argument to #%s must be a capture name, got \"%s\"";
+            throw new QueryError.Predicate(row, error, name, value);
+        }
+        var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
+        if (TSQueryPredicateStep.type(t2) != TSQueryPredicateStepTypeString()) {
+            var value = captureNames.get(TSQueryPredicateStep.value_id(t2));
+            var error = "second argument to #%s must be a string literal, got @%s";
+            throw new QueryError.Predicate(row, error, name, value);
+        }
+        try {
+            var capture = captureNames.get(TSQueryPredicateStep.value_id(t1));
+            var pattern = Pattern.compile(stringValues.get(TSQueryPredicateStep.value_id(t2)));
+            return new QueryPredicate.Match(name, capture, pattern);
+        } catch (PatternSyntaxException e) {
+            throw new QueryError.Predicate(row, "pattern error", e);
+        }
+    }
+
+    /** {@code #any-of?} predicate */
+    private QueryPredicate handlePredicateAnyOf(String name, MemorySegment tokens, long nargs, long row) {
+        if (nargs < 3) {
+            var error = "#%s expects at least 2 arguments, got %d";
+            throw new QueryError.Predicate(row, error, name, nargs - 1);
+        }
+        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
+        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeCapture()) {
+            var value = stringValues.get(TSQueryPredicateStep.value_id(t1));
+            var error = "first argument to #%s must be a capture name, got \"%s\"";
+            throw new QueryError.Predicate(row, error, name, value);
+        }
+        List<String> values = new ArrayList<>((int) nargs - 2);
+        for (long k = 2; k < nargs; ++k) {
+            var t = TSQueryPredicateStep.asSlice(tokens, k);
+            if (TSQueryPredicateStep.type(t) != TSQueryPredicateStepTypeString()) {
+                var value = captureNames.get(TSQueryPredicateStep.value_id(t));
+                var error = "arguments to #%s must be string literals, got @%s";
+                throw new QueryError.Predicate(row, error, name, value);
+            }
+            values.add(stringValues.get(TSQueryPredicateStep.value_id(t)));
+        }
+        var capture = captureNames.get(TSQueryPredicateStep.value_id(t1));
+        return new QueryPredicate.AnyOf(name, capture, values);
+    }
+
+    /** {@code #is?} predicate */
+    private void handlePredicateAssertion(
+            String name, MemorySegment tokens, long nargs, long row, Map<String, Optional<String>> assertions) {
+        if (nargs == 1 || nargs > 3) {
+            var error = "#%s expects 1-2 arguments, got %d";
+            throw new QueryError.Predicate(row, error, name, nargs - 1);
+        }
+        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
+        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeString()) {
+            var value = captureNames.get(TSQueryPredicateStep.value_id(t1));
+            var error = "first argument to #%s must be a string literal, got @%s";
+            throw new QueryError.Predicate(row, error, name, value);
+        }
+        String key = stringValues.get(TSQueryPredicateStep.value_id(t1)), value = null;
+        if (nargs == 3) {
+            var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
+            if (TSQueryPredicateStep.type(t2) != TSQueryPredicateStepTypeString()) {
+                var capture = captureNames.get(TSQueryPredicateStep.value_id(t2));
+                var error = "second argument to #%s must be a string literal, got @%s";
+                throw new QueryError.Predicate(row, error, name, capture);
+            }
+            value = stringValues.get(TSQueryPredicateStep.value_id(t2));
+        }
+        assertions.put(key, Optional.ofNullable(value));
+    }
+
+    /** {@code #set!} directive */
+    private void handleDirectiveSet(
+            String name, MemorySegment tokens, long nargs, long row, Map<String, Optional<String>> settings) {
+        if (nargs == 1 || nargs > 3) {
+            var error = "#%s expects 1-2 arguments, got %d";
+            throw new QueryError.Predicate(row, error, name, nargs - 1);
+        }
+        var t1 = TSQueryPredicateStep.asSlice(tokens, 1);
+        if (TSQueryPredicateStep.type(t1) != TSQueryPredicateStepTypeString()) {
+            var value = captureNames.get(TSQueryPredicateStep.value_id(t1));
+            var error = "first argument to #%s must be a string literal, got @%s";
+            throw new QueryError.Predicate(row, error, name, value);
+        }
+        String key = stringValues.get(TSQueryPredicateStep.value_id(t1)), value = null;
+        if (nargs == 3) {
+            var t2 = TSQueryPredicateStep.asSlice(tokens, 2);
+            if (TSQueryPredicateStep.type(t2) != TSQueryPredicateStepTypeString()) {
+                var capture = captureNames.get(TSQueryPredicateStep.value_id(t2));
+                var error = "second argument to #%s must be a string literal, got @%s";
+                throw new QueryError.Predicate(row, error, name, capture);
+            }
+            value = stringValues.get(TSQueryPredicateStep.value_id(t2));
+        }
+        settings.put(key, Optional.ofNullable(value));
     }
 
     MemorySegment segment() {
