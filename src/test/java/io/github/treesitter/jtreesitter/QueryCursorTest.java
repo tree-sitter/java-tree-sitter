@@ -197,5 +197,18 @@ public class QueryCursorTest {
                         matches.getFirst().captures().getFirst().node().getText());
             });
         }
+
+        // Verify that multiple predicates with different number of args are handled correctly
+        try (var tree = parser.parse("int a, b;").orElseThrow()) {
+            var source = """
+                ((_) @a (_) @b (#any-of? @a "a" "x") (#eq? @b "b"))
+                """;
+            assertCursor(source, cursor -> {
+                var matches = cursor.findMatches(tree.getRootNode()).toList();
+                assertEquals(1, matches.size());
+                assertEquals("a", matches.getFirst().findNodes("a").getFirst().getText());
+                assertEquals("b", matches.getFirst().findNodes("b").getFirst().getText());
+            });
+        }
     }
 }
