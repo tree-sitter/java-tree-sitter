@@ -16,7 +16,7 @@ jobs:
       url: https://central.sonatype.com/artifact/io.github.tree-sitter/jtreesitter
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           submodules: true
       - name: Set up Java
