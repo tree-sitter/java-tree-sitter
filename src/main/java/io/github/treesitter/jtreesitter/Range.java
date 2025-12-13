@@ -1,6 +1,9 @@
 package io.github.treesitter.jtreesitter;
 
+import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
+
 import io.github.treesitter.jtreesitter.internal.TSRange;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 import org.jspecify.annotations.NullMarked;
@@ -42,6 +45,20 @@ public record Range(Point startPoint, Point endPoint, @Unsigned int startByte, @
         TSRange.start_point(range, startPoint.into(allocator));
         TSRange.end_point(range, endPoint.into(allocator));
         return range;
+    }
+
+    /**
+     * Edit the range to keep it in-sync with source code that has been edited.
+     *
+     * <p>This function updates the range's byte offset and row/column position based on an edit
+     * operation. This is useful for editing ranges without requiring a tree or node instance.
+     *
+     * @since 0.26.0
+     */
+    public void edit(InputEdit edit) {
+        try (var alloc = Arena.ofConfined()) {
+            ts_range_edit(into(alloc), edit.into(alloc));
+        }
     }
 
     @Override
