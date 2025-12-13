@@ -53,7 +53,7 @@ jobs:
       - name: Get tree-sitter commit
         shell: sh
         run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
-      - name: Set up tree-sitter
+      - name: Set up tree-sitter CLI
         uses: tree-sitter/setup-action/cli@v2
       - name: Set up tree-sitter library
         uses: tree-sitter/setup-action/lib@v2

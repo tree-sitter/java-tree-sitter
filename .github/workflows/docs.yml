@@ -39,7 +39,11 @@ jobs:
           distribution: temurin
           java-version: 25
           cache: maven
-      - name: Set up tree-sitter
+      - name: Get tree-sitter commit
+        run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
+      - name: Set up tree-sitter library
+        with:
+          tree-sitter-ref: ${{env.TREE_SITTER_REF}}
         uses: tree-sitter/setup-action/lib@v2
       - name: Set up tree-sitter-java
         run: |-
@@ -47,7 +51,7 @@ jobs:
           make -Ctree-sitter-java all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
       - name: Set up jextract
         run: |-
-          curl -LSs '${{env.JEXTRACT_URL}}' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          curl -LSs '${{env.JEXTRACT_URL}}_linux-x64_bin.tar.gz' | tar xzf - -C "$RUNNER_TOOL_CACHE"
           printf '%s/jextract-25/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
         env:
           # NOTE: keep this in sync with ci, deploy
