@@ -9,7 +9,6 @@ import java.lang.foreign.MemorySegment;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -53,30 +52,6 @@ public final class Parser implements AutoCloseable {
     }
 
     /**
-     * Get the maximum duration in microseconds that
-     * parsing should be allowed to take before halting.
-     *
-     * @deprecated Use {@link Options} instead.
-     */
-    @Deprecated(since = "0.25.0")
-    public @Unsigned long getTimeoutMicros() {
-        return ts_parser_timeout_micros(self);
-    }
-
-    /**
-     * Set the maximum duration in microseconds that
-     * parsing should be allowed to take before halting.
-     *
-     * @deprecated Use {@link Options} instead.
-     */
-    @Deprecated(since = "0.25.0")
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    public Parser setTimeoutMicros(@Unsigned long timeoutMicros) {
-        ts_parser_set_timeout_micros(self, timeoutMicros);
-        return this;
-    }
-
-    /**
      * Set the logger that the parser will use during parsing.
      *
      * <h4 id="logger-example">Example</h4>
@@ -105,21 +80,6 @@ public final class Parser implements AutoCloseable {
             TSLogger.log(segment, log);
             ts_parser_set_logger(self, segment);
         }
-        return this;
-    }
-
-    /**
-     * Set the parser's current cancellation flag.
-     *
-     * <p>The parser will periodically read from this flag during parsing.
-     * If it reads a non-zero value, it will halt early.
-     *
-     * @deprecated Use {@link Options} instead.
-     */
-    @Deprecated(since = "0.25.0")
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    public synchronized Parser setCancellationFlag(CancellationFlag cancellationFlag) {
-        ts_parser_set_cancellation_flag(self, cancellationFlag.segment);
         return this;
     }
 
@@ -409,33 +369,6 @@ public final class Parser implements AutoCloseable {
 
         private boolean progressCallback(State state) {
             return progressCallback.test(state);
-        }
-    }
-
-    /**
-     * A class representing a cancellation flag.
-     *
-     * @deprecated Use {@link Options} instead.
-     */
-    @Deprecated(since = "0.25.0")
-    @SuppressWarnings("DeprecatedIsStillUsed")
-    public static class CancellationFlag {
-        private final Arena arena = Arena.ofAuto();
-        private final MemorySegment segment = arena.allocate(C_LONG_LONG);
-        private final AtomicLong value = new AtomicLong();
-
-        /** Creates an uninitialized cancellation flag. */
-        public CancellationFlag() {}
-
-        /** Get the value of the flag. */
-        public long get() {
-            return value.get();
-        }
-
-        /** Set the value of the flag. */
-        @SuppressWarnings("unused")
-        public void set(long value) {
-            segment.set(C_LONG_LONG, 0L, this.value.updateAndGet(_ -> value));
         }
     }
 }

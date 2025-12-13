@@ -115,43 +115,6 @@ class ParserTest {
     }
 
     @Test
-    @DisplayName("parse(timeout)")
-    @SuppressWarnings("deprecation")
-    void parseTimeout() {
-        var source = "}".repeat(1024);
-        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
-
-        parser.setLanguage(language).setTimeoutMicros(2L);
-        assertTrue(parser.parse(callback, InputEncoding.UTF_8).isEmpty());
-    }
-
-    @Test
-    @DisplayName("parse(cancellation)")
-    @SuppressWarnings("deprecation")
-    void parseCancellation() {
-        var source = "}".repeat(1024 * 1024);
-        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
-
-        var flag = new Parser.CancellationFlag();
-        parser.setLanguage(language).setCancellationFlag(flag);
-        try (var service = Executors.newFixedThreadPool(2)) {
-            service.submit(() -> {
-                try {
-                    wait(10L);
-                } catch (InterruptedException e) {
-                    service.shutdownNow();
-                } finally {
-                    flag.set(1L);
-                }
-            });
-            var result = service.submit(() -> parser.parse(callback, InputEncoding.UTF_8));
-            assertTrue(result.get(30L, TimeUnit.MILLISECONDS).isEmpty());
-        } catch (InterruptedException | CancellationException | ExecutionException | TimeoutException e) {
-            fail("Parsing was not halted gracefully", e);
-        }
-    }
-
-    @Test
     @DisplayName("parse(options)")
     void parseOptions() {
         var source = "}".repeat(1024);

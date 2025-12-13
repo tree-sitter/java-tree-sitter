@@ -58,10 +58,8 @@ public class LanguageTest {
 
     @Test
     void getSupertypes() {
-        assertArrayEquals(
-            new short[]{ 140, 263, 264, 216, 147, 219, 157, 185 },
-            language.getSupertypes()
-        );
+        short[] supertypes = {140, 263, 264, 216, 147, 219, 157, 185};
+        assertArrayEquals(supertypes, language.getSupertypes());
     }
 
     @Test

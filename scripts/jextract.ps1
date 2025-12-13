@@ -90,7 +90,6 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_node_string `
     --include-function ts_node_symbol `
     --include-function ts_node_type `
-    --include-function ts_parser_cancellation_flag `
     --include-function ts_parser_delete `
     --include-function ts_parser_included_ranges `
     --include-function ts_parser_language `
@@ -102,12 +101,10 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_parser_parse_with_options `
     --include-function ts_parser_print_dot_graphs `
     --include-function ts_parser_reset `
-    --include-function ts_parser_set_cancellation_flag `
     --include-function ts_parser_set_included_ranges `
     --include-function ts_parser_set_language `
     --include-function ts_parser_set_logger `
-    --include-function ts_parser_set_timeout_micros `
-    --include-function ts_parser_timeout_micros `
+    --include-function ts_point_edit `
     --include-function ts_query_capture_count `
     --include-function ts_query_capture_name_for_id `
     --include-function ts_query_capture_quantifier_for_id `
@@ -121,11 +118,11 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_query_cursor_next_match `
     --include-function ts_query_cursor_remove_match `
     --include-function ts_query_cursor_set_byte_range `
+    --include-function ts_query_cursor_set_containing_byte_range `
+    --include-function ts_query_cursor_set_containing_point_range `
     --include-function ts_query_cursor_set_match_limit `
     --include-function ts_query_cursor_set_max_start_depth `
     --include-function ts_query_cursor_set_point_range `
-    --include-function ts_query_cursor_set_timeout_micros `
-    --include-function ts_query_cursor_timeout_micros `
     --include-function ts_query_delete `
     --include-function ts_query_disable_capture `
     --include-function ts_query_disable_pattern `
@@ -139,6 +136,7 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_query_start_byte_for_pattern `
     --include-function ts_query_string_count `
     --include-function ts_query_string_value_for_id `
+    --include-function ts_range_edit `
     --include-function ts_tree_copy `
     --include-function ts_tree_cursor_copy `
     --include-function ts_tree_cursor_current_depth `
@@ -193,7 +191,7 @@ $lib = "$($args[0])/core/lib"
     --include-constant TSSymbolTypeAuxiliary `
     --include-constant TSSymbolTypeRegular `
     --include-constant TSSymbolTypeSupertype `
-    --include-typedef DecodeFunction `
+    --include-typedef TSDecodeFunction `
     --header-class-name TreeSitter `
     --output $output `
     -t $package `

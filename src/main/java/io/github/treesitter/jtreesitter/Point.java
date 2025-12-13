@@ -1,6 +1,9 @@
 package io.github.treesitter.jtreesitter;
 
+import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
+
 import io.github.treesitter.jtreesitter.internal.TSPoint;
+import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SegmentAllocator;
 
@@ -33,6 +36,23 @@ public record Point(@Unsigned int row, @Unsigned int column) implements Comparab
         var rowDiff = Integer.compareUnsigned(row, other.row);
         if (rowDiff != 0) return rowDiff;
         return Integer.compareUnsigned(column, other.column);
+    }
+
+    /**
+     * Edit the point to keep it in-sync with source code that has been edited.
+     *
+     * <p>This function updates the point's byte offset and row/column position based on an edit
+     * operation. This is useful for editing points without requiring a tree or node instance.
+     *
+     * @return The new start byte of the point.
+     * @since 0.26.0
+     */
+    public @Unsigned int edit(InputEdit edit) {
+        try (var alloc = Arena.ofConfined()) {
+            var start_byte = alloc.allocate(C_INT.byteSize(), C_INT.byteAlignment());
+            ts_point_edit(into(alloc), start_byte, edit.into(alloc));
+            return start_byte.get(C_INT, 0);
+        }
     }
 
     @Override

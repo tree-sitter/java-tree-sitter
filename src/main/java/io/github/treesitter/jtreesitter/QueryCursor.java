@@ -56,31 +56,6 @@ public class QueryCursor implements AutoCloseable {
     }
 
     /**
-     * Get the maximum duration in microseconds that query
-     * execution should be allowed to take before halting.
-     *
-     * @apiNote Defaults to {@code 0} (unlimited).
-     *
-     * @deprecated Use {@link Options} instead.
-     */
-    @Deprecated(since = "0.25.0")
-    public @Unsigned long getTimeoutMicros() {
-        return ts_query_cursor_timeout_micros(self);
-    }
-
-    /**
-     * Set the maximum duration in microseconds that query
-     * execution should be allowed to take before halting.
-     *
-     * @deprecated Use {@link Options} instead.
-     */
-    @Deprecated(since = "0.25.0")
-    public QueryCursor setTimeoutMicros(@Unsigned long timeoutMicros) {
-        ts_query_cursor_set_timeout_micros(self, timeoutMicros);
-        return this;
-    }
-
-    /**
      * Set the maximum start depth for the query.
      *
      * <p>This prevents cursors from exploring children nodes at a certain depth.
@@ -93,6 +68,7 @@ public class QueryCursor implements AutoCloseable {
 
     /**
      * Set the range of bytes in which the query will be executed.
+     *
      * <p>The query cursor will return matches that intersect with the given range.
      * This means that a match may be returned even if some of its captures fall
      * outside the specified range, as long as at least part of the match
@@ -106,6 +82,25 @@ public class QueryCursor implements AutoCloseable {
      */
     public QueryCursor setByteRange(@Unsigned int startByte, @Unsigned int endByte) throws IllegalArgumentException {
         if (!ts_query_cursor_set_byte_range(self, startByte, endByte)) {
+            throw new IllegalArgumentException("Invalid byte range");
+        }
+        return this;
+    }
+
+    /**
+     * Set the byte range within which all matches must be fully contained.
+     *
+     * <p>In contrast to {@link #setByteRange(int, int)}, this will restrict the query cursor
+     * to only return matches where <em>all</em> nodes are <em>fully</em> contained within
+     * the given range. Both functions can be used together, e.g. to search for any matches
+     * that intersect line 5000, as long as they are fully contained within lines 4500-5500.
+     *
+     * @throws IllegalArgumentException If {@code endByte > startByte}.
+     * @since 0.26.0
+     */
+    public QueryCursor setContainingByteRange(@Unsigned int startByte, @Unsigned int endByte)
+            throws IllegalArgumentException {
+        if (!ts_query_cursor_set_containing_byte_range(self, startByte, endByte)) {
             throw new IllegalArgumentException("Invalid byte range");
         }
         return this;
@@ -129,6 +124,27 @@ public class QueryCursor implements AutoCloseable {
         try (var alloc = Arena.ofConfined()) {
             MemorySegment start = startPoint.into(alloc), end = endPoint.into(alloc);
             if (!ts_query_cursor_set_point_range(self, start, end)) {
+                throw new IllegalArgumentException("Invalid point range");
+            }
+        }
+        return this;
+    }
+
+    /**
+     * Set the point range within which all matches must be fully contained.
+     *
+     * <p>In contrast to {@link #setPointRange(Point, Point)}, this will restrict the query cursor
+     * to only return matches where <em>all</em> nodes are <em>fully</em> contained within
+     * the given range. Both functions can be used together, e.g. to search for any matches
+     * that intersect line 5000, as long as they are fully contained within lines 4500-5500.
+     *
+     * @throws IllegalArgumentException If {@code endPoint > startPoint}.
+     * @since 0.26.0
+     */
+    public QueryCursor setContainingPointRange(Point startPoint, Point endPoint) throws IllegalArgumentException {
+        try (var alloc = Arena.ofConfined()) {
+            MemorySegment start = startPoint.into(alloc), end = endPoint.into(alloc);
+            if (!ts_query_cursor_set_containing_point_range(self, start, end)) {
                 throw new IllegalArgumentException("Invalid point range");
             }
         }
@@ -299,13 +315,20 @@ public class QueryCursor implements AutoCloseable {
         private final @Nullable BiPredicate<QueryPredicate, QueryMatch> predicateCallback;
 
         /**
+         * @since 0.26.0
+         */
+        public Options() {
+            this.progressCallback = null;
+            this.predicateCallback = null;
+        }
+
+        /**
          * @param progressCallback Progress handler. Return {@code true} to cancel query execution,
          *                         {@code false} to continue query execution.
          * @param predicateCallback Custom predicate handler.
+         * @since 0.26.0
          */
-        public Options(
-                @Nullable Predicate<State> progressCallback,
-                @Nullable BiPredicate<QueryPredicate, QueryMatch> predicateCallback) {
+        public Options(Predicate<State> progressCallback, BiPredicate<QueryPredicate, QueryMatch> predicateCallback) {
             this.progressCallback = progressCallback;
             this.predicateCallback = predicateCallback;
         }
