@@ -5,7 +5,7 @@
  *
  * <ul>
  * <li>
- *     JDK 22 (for the
+ *     JDK 23+ (for the
  *     <a href="https://docs.oracle.com/en/java/javase/22/core/foreign-function-and-memory-api.html">
  *         Foreign Function and Memory API
  *     </a>)
