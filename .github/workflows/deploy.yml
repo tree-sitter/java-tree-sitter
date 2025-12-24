@@ -43,15 +43,18 @@ jobs:
           cd tree-sitter-java
           tree-sitter generate --abi=15
           make all install PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
-      - name: Set up jextract
+      - name: Generate code with jextract
         run: |-
           curl -LSs '${{env.JEXTRACT_URL}}_linux-x64_bin.tar.gz' | tar xzf - -C "$RUNNER_TOOL_CACHE"
           printf '%s/jextract-25/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+          mvn --no-transfer-progress antrun:run@jextract
+          sed -i '${{env.TS_SHARED}}' -e '/C_LONG =/s/"long"/"long long"/'
         env:
           # NOTE: keep this in sync with ci, docs
           JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
+          TS_SHARED: target/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter$shared.java
       - name: Deploy to Maven Central
-        run: mvn --no-transfer-progress deploy -Dspotbugs.skip=true
+        run: mvn --no-transfer-progress deploy -Dspotbugs.skip=true -Djextract.skip=true
         env:
           SONATYPE_USERNAME: ${{secrets.SONATYPE_USERNAME}}
           SONATYPE_TOKEN: ${{secrets.SONATYPE_TOKEN}}
