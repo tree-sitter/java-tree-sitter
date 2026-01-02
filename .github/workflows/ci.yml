@@ -35,6 +35,17 @@ jobs:
     name: Generate jextract code on Linux
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          # NOTE: keep this in sync with deploy
+          java-version: 25
+          cache: maven
       - name: Set up jextract
         shell: bash
         run: |-
@@ -43,6 +54,8 @@ jobs:
         env:
           # NOTE: keep this in sync with deploy, docs
           JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
+      - name: Generate code
+        run: mvn --no-transfer-progress generate-sources
       - name: Upload jextract generated code
         uses: actions/upload-artifact@v6
         with:
@@ -110,12 +123,14 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: jextract-linux-code
+          path: target/generated-sources/jextract
       - name: Set up jextract
         if: ${{ !matrix.use-jextract-linux-code }}
         shell: bash
         run: |-
           if [[ $RUNNER_OS == Linux ]]; then
-            JEXTRACT_URL+=_linux-x64_bin.tar.gz
+            echo "Linux jextract code should have been used from dedicated job"
+            exit 1
           elif [[ $RUNNER_OS == macOS ]]; then
             JEXTRACT_URL+=_macos-aarch64_bin.tar.gz
           else
@@ -127,7 +142,7 @@ jobs:
           # NOTE: keep this in sync with deploy, docs
           JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
       - name: Run tests
-        run: mvn --no-transfer-progress test -Djextract.skip=${{ matrix.use-jextract-linux-code }}
+        run: mvn --no-transfer-progress test "-Djextract.skip=${{ matrix.use-jextract-linux-code }}"
       - name: Patch SpotBugs SARIF report
         if: "!cancelled() && github.event_name == 'push'"
         run: mvn antrun:run@patch-sarif
