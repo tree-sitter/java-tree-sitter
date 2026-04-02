@@ -3,6 +3,8 @@ package io.github.treesitter.jtreesitter;
 import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 
 import io.github.treesitter.jtreesitter.internal.*;
+
+import java.io.ByteArrayOutputStream;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
@@ -64,7 +66,6 @@ public final class Parser implements AutoCloseable {
      *    (type, message) -> logger.info("%s - %s".formatted(type.name(), message)));
      * }
      */
-    @SuppressWarnings("unused")
     public Parser setLogger(@Nullable Logger logger) {
         if (logger == null) {
             ts_parser_set_logger(self, TSLogger.allocate(arena));
@@ -216,7 +217,7 @@ public final class Parser implements AutoCloseable {
             var old = oldTree == null ? MemorySegment.NULL : oldTree.segment();
             var tree = ts_parser_parse_string_encoding(self, old, string, bytes.length, encoding.ordinal());
             if (tree.equals(MemorySegment.NULL)) return Optional.empty();
-            return Optional.of(new Tree(tree, language, source, encoding.charset()));
+            return Optional.of(new Tree(tree, language, bytes, encoding.charset()));
         }
     }
 
@@ -253,7 +254,6 @@ public final class Parser implements AutoCloseable {
      * @return An optional {@linkplain Tree} which is empty if parsing was halted.
      * @throws IllegalStateException If the parser does not have a language assigned.
      */
-    @SuppressWarnings("unused")
     public Optional<Tree> parse(
             ParseCallback parseCallback, InputEncoding encoding, @Nullable Tree oldTree, @Nullable Options options)
             throws IllegalStateException {
@@ -261,6 +261,7 @@ public final class Parser implements AutoCloseable {
             throw new IllegalStateException("The parser has no language assigned");
         }
 
+        var collected = new ByteArrayOutputStream();
         var input = TSInput.allocate(arena);
         TSInput.payload(input, MemorySegment.NULL);
         TSInput.encoding(input, encoding.ordinal());
@@ -272,6 +273,15 @@ public final class Parser implements AutoCloseable {
                         return MemorySegment.NULL;
                     }
                     var buffer = result.getBytes(encoding.charset());
+                    var collectedSize = collected.size();
+                    if (index >= collectedSize) {
+                        collected.write(buffer, 0, buffer.length);
+                    } else {
+                        var overlap = collectedSize - index;
+                        if (overlap < buffer.length) {
+                            collected.write(buffer, overlap, buffer.length - overlap);
+                        }
+                    }
                     bytes.set(C_INT, 0, buffer.length);
                     return arena.allocateFrom(C_CHAR, buffer);
                 },
@@ -295,7 +305,7 @@ public final class Parser implements AutoCloseable {
             tree = ts_parser_parse_with_options(self, old, input, parseOptions);
         }
         if (tree.equals(MemorySegment.NULL)) return Optional.empty();
-        return Optional.of(new Tree(tree, language, null, null));
+        return Optional.of(new Tree(tree, language, collected.toByteArray(), encoding.charset()));
     }
 
     /**

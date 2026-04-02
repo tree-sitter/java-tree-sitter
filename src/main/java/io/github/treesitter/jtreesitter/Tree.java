@@ -17,16 +17,16 @@ import org.jspecify.annotations.Nullable;
 public final class Tree implements AutoCloseable, Cloneable {
     private final MemorySegment self;
     private byte[] source;
-    private @Nullable Charset charset;
+    private final Charset charset;
     private final Arena arena;
     private final Language language;
     private @Nullable List<Range> includedRanges;
 
-    Tree(MemorySegment self, Language language, @Nullable String source, @Nullable Charset charset) {
+    Tree(MemorySegment self, Language language, byte[] source, Charset charset) {
         arena = Arena.ofShared();
         this.self = self.reinterpret(arena, TreeSitter::ts_tree_delete);
         this.language = language;
-        this.source = source != null && charset != null ? source.getBytes(charset) : new byte[0];
+        this.source = source;
         this.charset = charset;
     }
 
@@ -45,13 +45,13 @@ public final class Tree implements AutoCloseable, Cloneable {
     }
 
     boolean hasText() {
-        return charset != null;
+        return source.length > 0;
     }
 
     @Nullable
     String getRegion(@Unsigned int start, @Unsigned int end) {
         var length = Math.min(end, source.length) - start;
-        return charset != null ? new String(source, start, length, charset) : null;
+        return hasText() ? new String(source, start, length, charset) : null;
     }
 
     /** Get the language that was used to parse the syntax tree. */
@@ -137,7 +137,6 @@ public final class Tree implements AutoCloseable, Cloneable {
             ts_tree_edit(self, edit.into(alloc));
         } finally {
             source = new byte[0];
-            charset = null;
         }
     }
 
