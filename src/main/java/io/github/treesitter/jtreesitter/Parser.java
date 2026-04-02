@@ -260,7 +260,7 @@ public final class Parser implements AutoCloseable {
         if (language == null) {
             throw new IllegalStateException("The parser has no language assigned");
         }
-        final var collected = new StringBuilder();
+        final var collected = new java.io.ByteArrayOutputStream();
 
         var input = TSInput.allocate(arena);
         TSInput.payload(input, MemorySegment.NULL);
@@ -272,8 +272,16 @@ public final class Parser implements AutoCloseable {
                         bytes.set(C_INT, 0, 0);
                         return MemorySegment.NULL;
                     }
-                    collected.append(result);
                     var buffer = result.getBytes(encoding.charset());
+                    var collectedSize = collected.size();
+                    if (index >= collectedSize) {
+                        collected.write(buffer, 0, buffer.length);
+                    } else {
+                        var overlap = collectedSize - index;
+                        if (overlap < buffer.length) {
+                            collected.write(buffer, overlap, buffer.length - overlap);
+                        }
+                    }
                     bytes.set(C_INT, 0, buffer.length);
                     return arena.allocateFrom(C_CHAR, buffer);
                 },
@@ -297,7 +305,7 @@ public final class Parser implements AutoCloseable {
             tree = ts_parser_parse_with_options(self, old, input, parseOptions);
         }
         if (tree.equals(MemorySegment.NULL)) return Optional.empty();
-        return Optional.of(new Tree(tree, language, collected.toString(), encoding.charset()));
+        return Optional.of(new Tree(tree, language, collected.toByteArray(), encoding.charset()));
     }
 
     /**
