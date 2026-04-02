@@ -106,10 +106,10 @@ class ParserTest {
     @DisplayName("parse(callback)")
     void parseCallback() {
         var source = "class Foo {}";
-        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(offset, source.length()));
+        ParseCallback callback = (offset, _) -> source.substring(offset, Integer.min(source.length(), offset + 1));
         parser.setLanguage(language);
         try (var tree = parser.parse(callback, InputEncoding.UTF_8).orElseThrow()) {
-            assertNull(tree.getText());
+            assertEquals(source, tree.getText());
             assertEquals("program", tree.getRootNode().getType());
         }
     }
