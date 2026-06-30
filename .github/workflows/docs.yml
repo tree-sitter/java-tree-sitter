@@ -30,7 +30,7 @@ jobs:
       url: ${{steps.deployment.outputs.page_url}}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: true
       - name: Set up Java
@@ -59,9 +59,9 @@ jobs:
       - name: Build javadoc
         run: mvn --no-transfer-progress javadoc:javadoc antrun:run@fix-javadoc
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: target/reports/apidocs
       - name: Publish to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
