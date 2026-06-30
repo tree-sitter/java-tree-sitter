@@ -51,7 +51,7 @@ jobs:
           sed -i '${{env.TS_SHARED}}' -e '/C_LONG =/s/"long"/"long long"/'
         env:
           # NOTE: keep this in sync with ci, docs
-          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4
           TS_SHARED: target/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter$shared.java
       - name: Deploy to Maven Central
         run: mvn --no-transfer-progress deploy -Dspotbugs.skip=true -Djextract.skip=true

@@ -86,7 +86,7 @@ jobs:
           printf '%s/jextract-25/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
         env:
           # NOTE: keep this in sync with deploy, docs
-          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4
       - name: Run tests
         run: mvn --no-transfer-progress test
       - name: Patch SpotBugs SARIF report
