@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: true
       - name: Set up Java
@@ -53,9 +53,14 @@ jobs:
           printf '%s/jextract-25/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
         env:
           # NOTE: keep this in sync with deploy, docs
-          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/1/openjdk-25-jextract+1-1
-      - name: Generate code
-        run: mvn --no-transfer-progress generate-sources
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4
+      - name: Generate code with jextract
+        # NOTE: keep this in sync with deploy
+        run:
+          mvn --no-transfer-progress antrun:run@jextract
+          sed -i '${{env.TS_SHARED}}' -e '/C_LONG =/s/"long"/"long long"/'
+        env:
+          TS_SHARED: target/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter$shared.java
       - name: Upload jextract generated code
         uses: actions/upload-artifact@v6
         with:
