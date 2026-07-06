@@ -56,7 +56,7 @@ jobs:
           JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4
       - name: Generate code with jextract
         # NOTE: keep this in sync with deploy
-        run:
+        run: |-
           mvn --no-transfer-progress antrun:run@jextract
           sed -i '${{env.TS_SHARED}}' -e '/C_LONG =/s/"long"/"long long"/'
         env:
