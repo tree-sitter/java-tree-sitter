@@ -31,13 +31,64 @@ permissions:
   security-events: write
 
 jobs:
+  jextract-linux:
+    name: Generate jextract code on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          # NOTE: keep this in sync with deploy
+          java-version: 25
+          cache: maven
+      - name: Set up jextract
+        shell: bash
+        run: |-
+          curl -LSs '${{env.JEXTRACT_URL}}_linux-x64_bin.tar.gz' | tar xzf - -C "$RUNNER_TOOL_CACHE"
+          printf '%s/jextract-25/bin\n' "$RUNNER_TOOL_CACHE" >> "$GITHUB_PATH"
+        env:
+          # NOTE: keep this in sync with deploy, docs
+          JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4
+      - name: Generate code with jextract
+        # NOTE: keep this in sync with deploy
+        run: |-
+          mvn --no-transfer-progress antrun:run@jextract
+          sed -i '${{env.TS_SHARED}}' -e '/C_LONG =/s/"long"/"long long"/'
+        env:
+          TS_SHARED: target/generated-sources/jextract/io/github/treesitter/jtreesitter/internal/TreeSitter$shared.java
+      - name: Upload jextract generated code
+        uses: actions/upload-artifact@v6
+        with:
+          name: jextract-linux-code
+          path: target/generated-sources/jextract
+          if-no-files-found: error
   test:
     name: Test package
+    needs: jextract-linux
     strategy:
       fail-fast: false
       matrix:
         target: [ubuntu-latest, windows-latest, macos-latest]
         java-version: [23, 24, 25]
+        # To match the release build workflow, use the jextract generated code for Linux and
+        # verify that it is portable
+        use-jextract-linux-code: [true]
+        # Additionally check for non-Linux platforms that the complete build setup, including running
+        # jextract on that platform, works as well
+        # This is mainly relevant for users building the project locally, since the release workflow
+        # uses only the jextract code from Linux
+        include:
+          - target: windows-latest
+            java-version: 25
+            use-jextract-linux-code: false
+          - target: macos-latest
+            java-version: 25
+            use-jextract-linux-code: false
     runs-on: ${{matrix.target}}
     steps:
       - name: Checkout repository
@@ -72,11 +123,19 @@ jobs:
             -DCMAKE_INSTALL_BINDIR=lib \
             -DCMAKE_INSTALL_PREFIX="$RUNNER_TOOL_CACHE/tree-sitter/lib"
           cmake --build build && cmake --install build --config Debug
+      - name: Download jextract generated code for Linux
+        if: ${{ matrix.use-jextract-linux-code }}
+        uses: actions/download-artifact@v7
+        with:
+          name: jextract-linux-code
+          path: target/generated-sources/jextract
       - name: Set up jextract
+        if: ${{ !matrix.use-jextract-linux-code }}
         shell: bash
         run: |-
           if [[ $RUNNER_OS == Linux ]]; then
-            JEXTRACT_URL+=_linux-x64_bin.tar.gz
+            echo "Linux jextract code should have been used from dedicated job"
+            exit 1
           elif [[ $RUNNER_OS == macOS ]]; then
             JEXTRACT_URL+=_macos-aarch64_bin.tar.gz
           else
@@ -88,7 +147,7 @@ jobs:
           # NOTE: keep this in sync with deploy, docs
           JEXTRACT_URL: https://download.java.net/java/early_access/jextract/25/2/openjdk-25-jextract+2-4
       - name: Run tests
-        run: mvn --no-transfer-progress test
+        run: mvn --no-transfer-progress test "-Djextract.skip=${{ matrix.use-jextract-linux-code }}"
       - name: Patch SpotBugs SARIF report
         if: "!cancelled() && github.event_name == 'push'"
         run: mvn antrun:run@patch-sarif
