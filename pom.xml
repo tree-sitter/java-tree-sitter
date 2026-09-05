@@ -155,7 +155,7 @@
       <plugin>
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
-        <version>3.9.0</version>
+        <version>3.10.1</version>
         <executions>
           <execution>
             <id>format-sources</id>
@@ -185,7 +185,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.10.3.0</version>
+        <version>4.10.4.0</version>
         <executions>
           <execution>
             <phase>process-classes</phase>
@@ -204,7 +204,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.6</version>
+        <version>3.6.0</version>
         <configuration>
           <reportsDirectory>
             ${project.build.directory}/reports/surefire
@@ -295,7 +295,7 @@
       <plugin>
         <groupId>io.github.mavenplugins</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
         <executions>
           <execution>
             <phase>deploy</phase>
