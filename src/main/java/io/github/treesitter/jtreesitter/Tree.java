@@ -34,7 +34,7 @@ public final class Tree implements AutoCloseable, Cloneable {
         var copy = ts_tree_copy(tree.self);
         arena = Arena.ofShared();
         self = copy.reinterpret(arena, TreeSitter::ts_tree_delete);
-        language = tree.language;
+        language = tree.language.clone();
         source = tree.source;
         charset = tree.charset;
         includedRanges = tree.includedRanges;
