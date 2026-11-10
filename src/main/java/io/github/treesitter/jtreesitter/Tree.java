@@ -5,10 +5,12 @@ import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 import io.github.treesitter.jtreesitter.internal.TSRange;
 import io.github.treesitter.jtreesitter.internal.TreeSitter;
 import java.lang.foreign.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -50,8 +52,9 @@ public final class Tree implements AutoCloseable, Cloneable {
 
     @Nullable
     String getRegion(@Unsigned int start, @Unsigned int end) {
+        if (!hasText()) return null;
         var length = Math.min(end, source.length) - start;
-        return hasText() ? new String(source, start, length, charset) : null;
+        return new String(source, start, length, charset);
     }
 
     /** Get the language that was used to parse the syntax tree. */
@@ -59,9 +62,30 @@ public final class Tree implements AutoCloseable, Cloneable {
         return language;
     }
 
-    /** Get the source code of the syntax tree, if available. */
+    /** Get the source code of the syntax tree as a string, if available. */
     public @Nullable String getText() {
         return hasText() ? new String(source, charset) : null;
+    }
+
+    /**
+     * Get the source code of the syntax tree as a byte buffer, if available.
+     *
+     * @since 0.27.0
+     *
+     * @implNote Keep in mind that modifying the buffer will modify the stored bytes.
+     */
+    public Optional<ByteBuffer> getBuffer() {
+        if (!hasText()) return Optional.empty();
+        return Optional.of(ByteBuffer.wrap(source));
+    }
+
+    /**
+     * Get the encoding of the syntax tree's source code.
+     *
+     * @since 0.27.0
+     */
+    public InputEncoding getEncoding() {
+        return InputEncoding.valueOf(charset);
     }
 
     /** Get the root node of the syntax tree. */

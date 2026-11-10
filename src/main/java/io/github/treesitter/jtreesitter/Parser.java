@@ -3,7 +3,6 @@ package io.github.treesitter.jtreesitter;
 import static io.github.treesitter.jtreesitter.internal.TreeSitter.*;
 
 import io.github.treesitter.jtreesitter.internal.*;
-
 import java.io.ByteArrayOutputStream;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;

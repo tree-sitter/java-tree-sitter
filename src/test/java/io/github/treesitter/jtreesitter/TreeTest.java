@@ -46,6 +46,16 @@ class TreeTest {
     }
 
     @Test
+    void getBuffer() {
+        assertArrayEquals(source.getBytes(), tree.getBuffer().get().array());
+    }
+
+    @Test
+    void getEncoding() {
+        assertEquals(InputEncoding.UTF_8, tree.getEncoding());
+    }
+
+    @Test
     void getRootNode() {
         assertEquals("program", tree.getRootNode().getType());
     }
@@ -77,6 +87,7 @@ class TreeTest {
     void edit() {
         tree.edit(new InputEdit(9, 9, 10, new Point(0, 10), new Point(0, 9), new Point(0, 10)));
         assertNull(tree.getText());
+        assertTrue(tree.getBuffer().isEmpty());
     }
 
     @Test
