@@ -207,7 +207,13 @@
           <reportsDirectory>
             ${project.build.directory}/reports/surefire
           </reportsDirectory>
-          <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+          <argLine>
+            --enable-native-access=ALL-UNNAMED
+            -XX:ErrorFile=target/hs_err_pid%p.log
+            -XX:+CreateCoredumpOnCrash
+          </argLine>
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
         </configuration>
       </plugin>
       <plugin>
