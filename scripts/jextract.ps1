@@ -108,6 +108,7 @@ $lib = "$($args[0])/core/lib"
     --include-function ts_query_capture_count `
     --include-function ts_query_capture_name_for_id `
     --include-function ts_query_capture_quantifier_for_id `
+    --include-function ts_query_copy `
     --include-function ts_query_cursor_delete `
     --include-function ts_query_cursor_did_exceed_match_limit `
     --include-function ts_query_cursor_exec `
