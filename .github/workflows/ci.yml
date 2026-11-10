@@ -37,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         target: [ubuntu-latest, windows-latest, macos-latest]
-        java-version: [23, 24, 25]
+        java-version: [23, 24, 25, 26, 27]
     runs-on: ${{matrix.target}}
     steps:
       - name: Checkout repository
