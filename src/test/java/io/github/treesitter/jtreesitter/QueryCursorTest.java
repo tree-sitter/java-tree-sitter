@@ -11,15 +11,13 @@ import org.junit.jupiter.api.Test;
 public class QueryCursorTest {
     private static Language language;
     private static Parser parser;
-    private static final String source =
-            """
-            (identifier) @identifier
+    private static final String source = """
+        (identifier) @identifier
 
-            (class_declaration
-                name: (identifier) @class
-                (class_body) @body)
-            """
-                    .stripIndent();
+        (class_declaration
+            name: (identifier) @class
+            (class_body) @body)
+        """.stripIndent();
 
     @BeforeAll
     static void beforeAll() {
@@ -105,15 +103,13 @@ public class QueryCursorTest {
         }
 
         try (var tree = parser.parse("int y = x + 1;").orElseThrow()) {
-            var source =
-                    """
-                    ((variable_declarator
-                      (identifier) @y
-                      (binary_expression
-                        (identifier) @x))
-                      (#not-eq? @y @x))
-                    """
-                            .stripIndent();
+            var source = """
+                ((variable_declarator
+                  (identifier) @y
+                  (binary_expression
+                    (identifier) @x))
+                  (#not-eq? @y @x))
+                """.stripIndent();
             assertCursor(source, cursor -> {
                 var matches = cursor.findMatches(tree.getRootNode()).toList();
                 assertEquals(1, matches.size());
@@ -126,8 +122,7 @@ public class QueryCursorTest {
             var source = """
                 ((identifier) @foo
                  (#eq? @foo "Foo"))
-                """
-                    .stripIndent();
+                """.stripIndent();
             assertCursor(source, cursor -> {
                 var matches = cursor.findMatches(tree.getRootNode()).toList();
                 assertEquals(1, matches.size());
@@ -136,10 +131,9 @@ public class QueryCursorTest {
             });
 
             source = """
-            ((identifier) @name
-             (#not-any-of? @name "Foo" "Bar"))
-            """
-                    .stripIndent();
+                ((identifier) @name
+                 (#not-any-of? @name "Foo" "Bar"))
+                """.stripIndent();
             assertCursor(source, cursor -> {
                 var matches = cursor.findMatches(tree.getRootNode()).toList();
                 assertTrue(matches.isEmpty());
@@ -148,8 +142,7 @@ public class QueryCursorTest {
             source = """
                 ((identifier) @foo
                  (#ieq? @foo "foo"))
-                """
-                    .stripIndent();
+                """.stripIndent();
             assertCursor(source, cursor -> {
                 var options = new QueryCursor.Options((predicate, match) -> {
                     if (!predicate.getName().equals("ieq?")) return true;
@@ -178,17 +171,16 @@ public class QueryCursorTest {
 
         // Verify that `eq?` predicate works with quantified captures
         try (var tree = parser.parse("/* 1 */ /* 1 */ {} /* 1 */ /* 1 */").orElseThrow()) {
-            var source =
-                    """
-                    (program
-                      .
-                      (block_comment)+ @a
-                      .
-                      (block)
-                      .
-                      (block_comment)+ @b
-                      (#eq? @a @b))
-                    """;
+            var source = """
+                (program
+                  .
+                  (block_comment)+ @a
+                  .
+                  (block)
+                  .
+                  (block_comment)+ @b
+                  (#eq? @a @b))
+                """;
             assertCursor(source, cursor -> {
                 var matches = cursor.findMatches(tree.getRootNode()).toList();
                 assertEquals(1, matches.size());

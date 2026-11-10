@@ -17,7 +17,10 @@ public record LanguageMetadata(Version version) {
      *
      * @since 0.25.0
      */
-    public record Version(@Unsigned short major, @Unsigned short minor, @Unsigned short patch) {
+    public record Version(
+            @Unsigned short major,
+            @Unsigned short minor,
+            @Unsigned short patch) {
         @Override
         public String toString() {
             return "%d.%d.%d".formatted(major, minor, patch);

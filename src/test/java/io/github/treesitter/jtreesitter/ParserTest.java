@@ -81,7 +81,8 @@ class ParserTest {
             assertEquals(32, rootNode.getEndByte());
             assertFalse(rootNode.isError());
             assertEquals(
-                    "(program (local_variable_declaration type: (type_identifier) declarator: (variable_declarator name: (identifier) value: (string_literal (string_fragment)))))",
+                    "(program (local_variable_declaration type: (type_identifier) declarator: (variable_declarator"
+                            + " name: (identifier) value: (string_literal (string_fragment)))))",
                     rootNode.toSexp());
         }
     }

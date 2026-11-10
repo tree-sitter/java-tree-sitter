@@ -13,7 +13,11 @@ import org.jspecify.annotations.NullMarked;
  * both in terms of bytes and of row-column points.
  */
 @NullMarked
-public record Range(Point startPoint, Point endPoint, @Unsigned int startByte, @Unsigned int endByte) {
+public record Range(
+        Point startPoint,
+        Point endPoint,
+        @Unsigned int startByte,
+        @Unsigned int endByte) {
     static final Range DEFAULT = new Range(Point.MIN, Point.MAX, 0, -1);
 
     /**

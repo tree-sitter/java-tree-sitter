@@ -13,15 +13,13 @@ import org.junit.jupiter.api.Test;
 class QueryTest {
     private static Language language;
     private static Parser parser;
-    private static final String source =
-            """
+    private static final String source = """
         (identifier) @identifier
 
         (class_declaration
             name: (identifier) @class
             (class_body) @body)
-        """
-                    .stripIndent();
+        """.stripIndent();
 
     @BeforeAll
     static void beforeAll() {
@@ -91,10 +89,9 @@ class QueryTest {
     @Test
     void getStringValues() {
         var source = """
-                ((identifier) @foo
-                 (#eq? @foo "Foo"))
-                """
-                .stripIndent();
+            ((identifier) @foo
+             (#eq? @foo "Foo"))
+            """.stripIndent();
         assertQuery(source, query -> assertIterableEquals(List.of("eq?", "Foo"), query.getStringValues()));
     }
 
@@ -180,13 +177,11 @@ class QueryTest {
 
     @Test
     void queryWithTwoPredicates() {
-        var source =
-                """
-                ((identifier) @foo
-                 (#eq? @foo "foo")
-                 (#not-eq? @foo "bar"))
-                """
-                        .stripIndent();
+        var source = """
+            ((identifier) @foo
+             (#eq? @foo "foo")
+             (#not-eq? @foo "bar"))
+            """.stripIndent();
         assertQuery(source, query -> {
             assertEquals(1, query.getPatternCount());
             assertIterableEquals(List.of("foo"), query.getCaptureNames());
