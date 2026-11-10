@@ -281,11 +281,7 @@
             </goals>
             <configuration>
               <bestPractices>true</bestPractices>
-              <gpgArguments>
-                <arg>--no-tty</arg>
-                <arg>--pinentry-mode</arg>
-                <arg>loopback</arg>
-              </gpgArguments>
+              <signer>bc</signer>
             </configuration>
           </execution>
         </executions>

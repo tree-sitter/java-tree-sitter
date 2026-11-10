@@ -26,9 +26,8 @@ jobs:
           java-version: 25
           cache: maven
           server-id: central
-          server-username: SONATYPE_USERNAME
-          server-password: SONATYPE_TOKEN
-          gpg-private-key: ${{secrets.GPG_KEY}}
+          server-username-env-var: SONATYPE_USERNAME
+          server-password-env-var: SONATYPE_TOKEN
       - name: Get tree-sitter commit
         run: printf 'TREE_SITTER_REF=%s\n' "$(git rev-parse HEAD:core)" >> "$GITHUB_ENV"
       - name: Set up tree-sitter CLI
@@ -62,6 +61,7 @@ jobs:
           SONATYPE_USERNAME: ${{secrets.SONATYPE_USERNAME}}
           SONATYPE_TOKEN: ${{secrets.SONATYPE_TOKEN}}
           MAVEN_GPG_PASSPHRASE: ${{secrets.GPG_PASSPHRASE}}
+          MAVEN_GPG_KEY: ${{secrets.GPG_KEY}}
       - name: Create release
         run: gh release create $GITHUB_REF_NAME --generate-notes
         env:
