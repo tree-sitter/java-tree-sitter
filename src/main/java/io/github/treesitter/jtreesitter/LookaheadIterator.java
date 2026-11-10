@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A class that is used to look up valid symbols in a specific parse state.
@@ -56,10 +57,12 @@ public final class LookaheadIterator implements AutoCloseable, Iterator<Lookahea
     /**
      * The current symbol name.
      *
-     * @apiNote Newly created lookahead iterators will contain the {@index ERROR} symbol.
+     * @apiNote This returns {@code null} unless the most recent
+     *          call to {@link #next} returned {@code true}.
      */
-    public String getCurrentSymbolName() {
-        return ts_lookahead_iterator_current_symbol_name(self).getString(0);
+    public @Nullable String getCurrentSymbolName() {
+        MemorySegment name = ts_lookahead_iterator_current_symbol_name(self);
+        return name.equals(MemorySegment.NULL) ? null : name.getString(0);
     }
 
     /**
@@ -69,7 +72,12 @@ public final class LookaheadIterator implements AutoCloseable, Iterator<Lookahea
      *         successfully or {@code false} if it failed.
      */
     public boolean reset(@Unsigned short state) {
-        return ts_lookahead_iterator_reset_state(self, state);
+        boolean result = ts_lookahead_iterator_reset_state(self, state);
+        if (result) {
+            iterFirst = true;
+            hasNext = false;
+        }
+        return result;
     }
 
     /**
@@ -79,7 +87,12 @@ public final class LookaheadIterator implements AutoCloseable, Iterator<Lookahea
      *         successfully or {@code false} if it failed.
      */
     public boolean reset(@Unsigned short state, Language language) {
-        return ts_lookahead_iterator_reset(self, language.segment(), state);
+        boolean result = ts_lookahead_iterator_reset(self, language.segment(), state);
+        if (result) {
+            iterFirst = true;
+            hasNext = false;
+        }
+        return result;
     }
 
     /** Check if the lookahead iterator has more symbols. */
@@ -111,7 +124,7 @@ public final class LookaheadIterator implements AutoCloseable, Iterator<Lookahea
      * @implNote Calling this method will reset the iterator to its original state.
      */
     public @Unsigned Stream<Short> symbols() {
-        ts_lookahead_iterator_reset_state(self, state);
+        reset(state);
         return StreamSupport.stream(new IdIterator(self), false);
     }
 
@@ -121,7 +134,7 @@ public final class LookaheadIterator implements AutoCloseable, Iterator<Lookahea
      * @implNote Calling this method will reset the iterator to its original state.
      */
     public Stream<String> names() {
-        ts_lookahead_iterator_reset_state(self, state);
+        reset(state);
         return StreamSupport.stream(new NameIterator(self), false);
     }
 
