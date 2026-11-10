@@ -21,7 +21,7 @@ import org.jspecify.annotations.Nullable;
  * @see <a href="https://tree-sitter.github.io/tree-sitter/using-parsers/queries/1-syntax.html">Query Syntax</a>
  */
 @NullMarked
-public final class Query implements AutoCloseable {
+public final class Query implements AutoCloseable, Cloneable {
     private final MemorySegment self;
     private final Arena arena;
     private final Language language;
@@ -83,6 +83,20 @@ public final class Query implements AutoCloseable {
         }
 
         handlePredicates(source, query, patternCount);
+    }
+
+    private Query(Query query) {
+        var copy = ts_query_copy(query.self);
+        arena = Arena.ofShared();
+        self = copy.reinterpret(arena, TreeSitter::ts_query_delete);
+        language = query.language.clone();
+        source = query.source;
+        captureNames = query.captureNames;
+        stringValues = query.stringValues;
+        predicates = query.predicates;
+        settings = query.settings;
+        positiveAssertions = query.positiveAssertions;
+        negativeAssertions = query.negativeAssertions;
     }
 
     private static void handleError(String source, MemorySegment errorOffset, MemorySegment errorType)
@@ -483,6 +497,17 @@ public final class Query implements AutoCloseable {
         checkIndex(index);
         var assertions = positive ? positiveAssertions : negativeAssertions;
         return Collections.unmodifiableMap(assertions.get(index));
+    }
+
+    /**
+     * Create a shallow copy of the query.
+     *
+     * @since 0.27.0
+     */
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public Query clone() {
+        return new Query(this);
     }
 
     @Override

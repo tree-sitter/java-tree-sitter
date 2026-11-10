@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class QueryTest {
@@ -32,7 +33,6 @@ class QueryTest {
         parser.close();
     }
 
-    @SuppressWarnings("unused")
     private static void assertError(Class<? extends QueryError> type, String source, String message) {
         try (var _ = new Query(language, source)) {
             fail("Expected QueryError to be thrown, but nothing was thrown.");
@@ -172,6 +172,16 @@ class QueryTest {
         assertQuery("((identifier) @foo (#is-not? foo \"FOO\"))", query -> {
             var assertions = query.getPatternAssertions(0, false);
             assertEquals("FOO", assertions.get("foo").orElse(null));
+        });
+    }
+
+    @Test
+    @DisplayName("clone()")
+    void copy() {
+        assertQuery("", query -> {
+            try (var copy = query.clone()) {
+                assertNotSame(query, copy);
+            }
         });
     }
 
