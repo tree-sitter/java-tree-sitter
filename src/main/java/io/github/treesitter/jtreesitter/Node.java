@@ -457,7 +457,7 @@ public final class Node {
 
     @Override
     public int hashCode() {
-        return Long.hashCode(getId());
+        return Arrays.hashCode(new long[] {getId(), TSNode.tree(self).address()});
     }
 
     @Override
